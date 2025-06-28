@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Z++ Editor | Z++ Update</title>
+    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-dark: #1e1e1e;
+            --editor-bg: #252526;
+            --text-light: #d4d4d4;
+            --accent-blue: #569cd6;
+            --accent-green: #4ec9b0;
+            --accent-red: #f48771;
+            --accent-purple: #c586c0;
+            --accent-update: #b63030;
+            --border-dark: #3c3c3c;
+            --terminal-bg: #1a1a1a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Fira Code', monospace;
+            background-color: var(--bg-dark);
+            color: var(--text-light);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        #app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            padding: 12px 20px;
+            background-color: var(--editor-bg);
+            border-bottom: 1px solid var(--border-dark);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .title {
+            font-size: 1.2rem;
+            color: var(--accent-update);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .version-badge {
+            background-color: var(--accent-update);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+        }
+
+        .language-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .lang-tab {
+            padding: 6px 12px;
+            background-color: var(--border-dark);
+            border: none;
+            border-radius: 4px;
+            color: var(--text-light);
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+        }
+
+        .lang-tab.active {
+            background-color: var(--accent-update);
+            color: white;
+        }
+
+        .button {
+            background-color: var(--accent-update);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-family: 'Fira Code', monospace;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .editor-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .editor-container {
+            flex: 1;
+            display: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .editor-container.active {
+            display: flex;
+            flex-direction: column;
+        }
+
+        #editor-content {
+            width: 100%;
+            height: 100%;
+            background-color: var(--editor-bg);
+            color: var(--text-light);
+            border: none;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            tab-size: 4;
+            white-space: pre-wrap;
+            outline: none;
+            overflow-y: auto;
+        }
+
+        #output-container {
+            height: 200px;
+            background-color: var(--terminal-bg);
+            border-top: 1px solid var(--border-dark);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .output-tabs {
+            display: flex;
+            background-color: var(--editor-bg);
+            border-bottom: 1px solid var(--border-dark);
+        }
+
+        .output-tab {
+            padding: 8px 16px;
+            cursor: pointer;
+            border-right: 1px solid var(--border-dark);
+        }
+
+        .output-tab.active {
+            background-color: var(--terminal-bg);
+            border-bottom: 2px solid var(--accent-update);
+        }
+
+        .output-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            display: none;
+        }
+
+        .output-content.active {
+            display: block;
+        }
+
+        .status-bar {
+            padding: 5px 15px;
+            background-color: var(--editor-bg);
+            border-top: 1px solid var(--border-dark);
+            font-size: 0.8rem;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .zpp-output {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: rgba(182, 48, 48, 0.1);
+            border-left: 3px solid var(--accent-update);
+        }
+
+        .zpp-error {
+            padding: 8px;
+            margin: 5px 0;
+            background-color: rgba(244, 135, 113, 0.1);
+            border-left: 3px solid var(--accent-red);
+        }
+
+        /* Syntax highlighting classes */
+        .keyword {
+            color: var(--accent-blue);
+            font-weight: 500;
+        }
+
+        .string {
+            color: var(--accent-green);
+        }
+
+        .number {
+            color: var(--accent-purple);
+        }
+
+        .comment {
+            color: #6A9955;
+        }
+
+        .operator {
+            color: var(--accent-red);
+        }
+
+        .variable {
+            color: #9CDCFE;
+        }
+
+        .function {
+            color: #DCDCAA;
+        }
+    </style>
+</head>
+<body>
+    <div id="app-container">
+        <div class="header">
+            <h1 class="title">
+                <i class="fas fa-code"></i> Z++ Editor
+                <span class="version-badge">Z++ Update</span>
+            </h1>
+            <div class="language-tabs">
+                <button class="lang-tab active" data-lang="zpp">Z++</button>
+                <button class="lang-tab" data-lang="zlang">Z/Hue</button>
+            </div>
+            <button class="button" id="run-button">
+                <i class="fas fa-play"></i> Run (F5)
+            </button>
+        </div>
+        
+        <div class="main-content">
+            <div class="editor-wrapper">
+                <div id="zpp-editor" class="editor-container active">
+                    <div id="editor-content" contenteditable="true"></div>
+                </div>
+                
+                <div id="output-container">
+                    <div class="output-tabs">
+                        <div class="output-tab active" data-tab="output">Output</div>
+                        <div class="output-tab" data-tab="errors">Errors</div>
+                    </div>
+                    <div class="output-content active" id="output-content"></div>
+                    <div class="output-content" id="error-content"></div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="status-bar">
+            <span id="status-message">Ready</span>
+            <span id="position-indicator">Ln 1, Col 1</span>
+        </div>
+    </div>
+
+    <script>
+        // Language Definitions
+        const zppSyntax = {
+            keywords: [
+                'Define', 'Log', 'Function', 'Use', 'Z\\+\\+', 'mPort', 
+                'Module', 'MiniFunc', 'RuzzPut', 'if', 'else', 'while',
+                'for', 'return', 'break', 'continue', 'true', 'false', 'null'
+            ],
+            operators: ['\\+', '-', '\\*', '/', '=', '!=', '==', '<=', '>=', '<', '>'],
+            patterns: {
+                variable: /-(\w+)-/g,
+                string: /(["'`])(?:(?=(\\?))\2.)*?\1/g,
+                number: /\b\d+\b/g,
+                comment: /\/\/.*$/gm
+            }
+        };
+
+        const zlangSyntax = {
+            keywords: [
+                'Define', 'Show', 'Image', 'HT', 'Hue', 'Update',
+                'Open', 'Render', 'Import', 'Use', 'Function', 'Lmput'
+            ],
+            operators: ['\\|=', '=>', '=\\|', '\\|\\|', '==', '='],
+            patterns: {
+                special: /<-Z->|`[^`]*`|\[[^\]]*\]/g,
+                string: /(["'])(?:(?=(\\?))\2.)*?\1/g,
+                number: /\b\d+\b/g,
+                comment: /\/\/.*$/gm
+            }
+        };
+
+        // Editor State
+        let currentEditor = "zpp";
+        let currentSyntax = zppSyntax;
+        const editorContent = document.getElementById('editor-content');
+        const outputContent = document.getElementById('output-content');
+        const errorContent = document.getElementById('error-content');
+
+        // Set initial content based on current language
+        const initialContent = {
+            zpp: `// Z++ Code Example
+Define -main-(params) {
+    Define.Log {id = "example"};
+    
+    Define -int- = 2 + 2;
+    Define.Log "2 + 2 = " + -int-;
+    
+    Z++mPort = "Zuzz";
+    Use.Function(input) {
+        Define.Log "Processing: " + input;
+    }
+}`,
+            zlang: `// Z/Hue Code Example
+Define <-Z-> |=| \`Welcome to Z/Hue\` {
+    Show.hue => {
+        Image.import: 'hue.png'[Id == 1]
+        HT-1 =| [Hello World!]||
+    }
+    
+    Hue.Update -V1.0.1-
+    Hue.Open = "module.z"
+}`
+        };
+
+        // Simple Z++ Runtime
+        class ZppRuntime {
+            constructor() {
+                this.variables = {};
+                this.functions = {};
+                this.output = [];
+                this.errors = [];
+            }
+
+            execute(code) {
+                this.clearState();
+                const lines = code.split('\n');
+                
+                try {
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line || line.startsWith('//')) continue;
+                        
+                        if (this.isKeyword(line, 'Define') && line.includes('=')) {
+                            this.handleDefinition(line, i+1);
+                        } else if (this.isKeyword(line, 'Define.Log')) {
+                            this.handleLog(line, i+1);
+                        } else if (this.isKeyword(line, 'Use.Function')) {
+                            this.handleFunction(line, i+1);
+                        } else if (this.isKeyword(line, 'Z++mPort')) {
+                            this.handlePort(line, i+1);
+                        }
+                    }
+                } catch (error) {
+                    this.errors.push({
+                        line: error.line || 'Unknown',
+                        message: error.message || 'Unknown error',
+                        lineNumber: error.lineNumber || 0
+                    });
+                }
+
+                return {
+                    output: this.output,
+                    errors: this.errors
+                };
+            }
+
+            isKeyword(line, keyword) {
+                const regex = new RegExp(`(^|\\s)${keyword}(\\s|\\(|$)`);
+                return regex.test(line);
+            }
+
+            handleDefinition(line, lineNumber) {
+                const match = line.match(/Define\s+-(\w+)-\s*=\s*(.+)/);
+                if (!match) {
+                    throw { message: 'Invalid definition', line, lineNumber };
+                }
+                
+                const varName = match[1];
+                const value = match[2].replace(/;$/, '');
+                
+                if (value.match(/^\d+\s*[\+\-\*\/]\s*\d+$/)) {
+                    this.variables[varName] = eval(value);
+                } else {
+                    this.variables[varName] = value.replace(/["']/g, '');
+                }
+                
+                this.output.push(`Variable defined: ${varName} = ${this.variables[varName]}`);
+            }
+
+            handleLog(line, lineNumber) {
+                const content = line.match(/Define\.Log\s+(.+)/)[1];
+                let message = content.replace(/[{}"';]/g, '');
+                
+                message = message.replace(/-\w+-/g, match => {
+                    const varName = match.replace(/-/g, '');
+                    return this.variables[varName] || match;
+                });
+                
+                this.output.push(`LOG: ${message}`);
+            }
+
+            handleFunction(line, lineNumber) {
+                const match = line.match(/Use\.Function\((\w+)\)/);
+                if (!match) {
+                    throw { message: 'Invalid function syntax', line, lineNumber };
+                }
+                
+                const param = match[1];
+                this.functions[param] = true;
+                this.output.push(`Function defined with parameter: ${param}`);
+            }
+
+            handlePort(line, lineNumber) {
+                const match = line.match(/Z\+\+mPort\s*=\s*"([^"]+)"/);
+                if (!match) {
+                    throw { message: 'Invalid port syntax', line, lineNumber };
+                }
+                
+                const port = match[1];
+                this.output.push(`Z++ port configured: ${port}`);
+            }
+
+            clearState() {
+                this.variables = {};
+                this.functions = {};
+                this.output = [];
+                this.errors = [];
+            }
+        }
+
+        // Simple Z/Hue Runtime
+        class ZLangHueRuntime {
+            constructor() {
+                this.output = [];
+                this.errors = [];
+            }
+
+            execute(code) {
+                this.clearState();
+                const lines = code.split('\n');
+                
+                try {
+                    for (let i = 0; i < lines.length; i++) {
+                        const line = lines[i].trim();
+                        if (!line || line.startsWith('//')) continue;
+                        
+                        if (this.isKeyword(line, 'Define <-Z->')) {
+                            this.handleZDefinition(line, i+1);
+                        } else if (this.isKeyword(line, 'Show.hue')) {
+                            this.handleShowHue(line, i+1);
+                        } else if (this.isKeyword(line, 'Hue.')) {
+                            this.handleHueCommand(line, i+1);
+                        }
+                    }
+                } catch (error) {
+                    this.errors.push({
+                        line: error.line || 'Unknown',
+                        message: error.message || 'Unknown error',
+                        lineNumber: error.lineNumber || 0
+                    });
+                }
+
+                return {
+                    output: this.output,
+                    errors: this.errors
+                };
+            }
+
+            isKeyword(line, keyword) {
+                const regex = new RegExp(`(^|\\s)${keyword.replace('.', '\\.')}`);
+                return regex.test(line);
+            }
+
+            handleZDefinition(line, lineNumber) {
+                const match = line.match(/`([^`]+)`/);
+                if (!match) {
+                    throw { message: 'Invalid Z definition', line, lineNumber };
+                }
+                this.output.push(`Z Module initialized: ${match[1]}`);
+            }
+
+            handleShowHue(line, lineNumber) {
+                this.output.push("Showing Hue content:");
+                
+                if (line.includes("Image.import")) {
+                    const match = line.match(/'([^']+)'/);
+                    if (match) {
+                        this.output.push(`- Image: ${match[1]}`);
+                    }
+                }
+                
+                if (line.includes("HT-")) {
+                    const match = line.match(/\[([^\]]+)\]/);
+                    if (match) {
+                        this.output.push(`- Text: ${match[1]}`);
+                    }
+                }
+            }
+
+            handleHueCommand(line, lineNumber) {
+                if (this.isKeyword(line, 'Hue.Update')) {
+                    const match = line.match(/-([\w.]+)-/);
+                    this.output.push(`Hue version updated to: ${match ? match[1] : 'unknown'}`);
+                } else if (this.isKeyword(line, 'Hue.Open')) {
+                    const match = line.match(/"([^"]+)"/);
+                    this.output.push(`Hue module opened: ${match ? match[1] : 'unknown'}`);
+                } else {
+                    this.output.push(`Executed Hue command: ${line}`);
+                }
+            }
+
+            clearState() {
+                this.output = [];
+                this.errors = [];
+            }
+        }
+
+        // Syntax Highlighting
+        function applySyntaxHighlighting() {
+            // Save cursor position
+            const selection = window.getSelection();
+            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
+            const cursorPos = range ? range.startOffset : 0;
+            const cursorNode = range ? range.startContainer : editorContent;
+            
+            // Get plain text content
+            const text = editorContent.textContent;
+            let highlighted = text;
+            
+            // Apply comments first
+            highlighted = highlighted.replace(
+                currentSyntax.patterns.comment, 
+                match => `<span class="comment">${match}</span>`
+            );
+            
+            // Apply strings
+            highlighted = highlighted.replace(
+                currentSyntax.patterns.string, 
+                match => `<span class="string">${match}</span>`
+            );
+            
+            // Apply numbers
+            highlighted = highlighted.replace(
+                currentSyntax.patterns.number, 
+                match => `<span class="number">${match}</span>`
+            );
+            
+            // Apply keywords
+            currentSyntax.keywords.forEach(keyword => {
+                const regex = new RegExp(`(^|\\s)(${keyword})(?=\\s|\\(|;|$)`, 'g');
+                highlighted = highlighted.replace(
+                    regex, 
+                    (match, p1, p2) => `${p1}<span class="keyword">${p2}</span>`
+                );
+            });
+            
+            // Apply operators
+            currentSyntax.operators.forEach(op => {
+                const regex = new RegExp(`(${op.replace(/\\/g, '')})`, 'g');
+                highlighted = highlighted.replace(
+                    regex, 
+                    match => `<span class="operator">${match}</span>`
+                );
+            });
+            
+            // Special patterns for Z++
+            if (currentEditor === 'zpp') {
+                highlighted = highlighted.replace(
+                    currentSyntax.patterns.variable, 
+                    match => `<span class="variable">${match}</span>`
+                );
+            }
+            
+            // Special patterns for Z/Hue
+            if (currentEditor === 'zlang') {
+                highlighted = highlighted.replace(
+                    currentSyntax.patterns.special, 
+                    match => `<span class="function">${match}</span>`
+                );
+            }
+            
+            // Update editor with highlighted content
+            editorContent.innerHTML = highlighted;
+            
+            // Restore cursor position
+            if (range) {
+                try {
+                    const newRange = document.createRange();
+                    const textNodes = getTextNodes(editorContent);
+                    let pos = 0;
+                    let targetNode = null;
+                    let targetOffset = 0;
+                    
+                    for (const node of textNodes) {
+                        if (pos + node.length >= cursorPos) {
+                            targetNode = node;
+                            targetOffset = cursorPos - pos;
+                            break;
+                        }
+                        pos += node.length;
+                    }
+                    
+                    if (targetNode) {
+                        newRange.setStart(targetNode, Math.min(targetOffset, targetNode.length));
+                        newRange.collapse(true);
+                        selection.removeAllRanges();
+                        selection.addRange(newRange);
+                    }
+                } catch (e) {
+                    console.log("Couldn't restore cursor position");
+                }
+            }
+        }
+
+        // Helper function to get all text nodes
+        function getTextNodes(node) {
+            const textNodes = [];
+            const walker = document.createTreeWalker(
+                node,
+                NodeFilter.SHOW_TEXT,
+                null,
+                false
+            );
+            
+            let textNode;
+            while (textNode = walker.nextNode()) {
+                textNodes.push(textNode);
+            }
+            
+            return textNodes;
+        }
+
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Language tabs
+            document.querySelectorAll('.lang-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentEditor = tab.dataset.lang;
+                    currentSyntax = currentEditor === 'zpp' ? zppSyntax : zlangSyntax;
+                    
+                    // Update editor content
+                    editorContent.textContent = initialContent[currentEditor];
+                    applySyntaxHighlighting();
+                });
+            });
+
+            // Editor input
+            editorContent.addEventListener('input', () => {
+                // Use setTimeout to allow the DOM to update before applying highlighting
+                setTimeout(applySyntaxHighlighting, 0);
+                updateCursorPosition();
+            });
+
+            // Output tabs
+            document.querySelectorAll('.output-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.output-content').forEach(c => c.classList.remove('active'));
+                    
+                    tab.classList.add('active');
+                    document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
+                });
+            });
+
+            // Run button
+            document.getElementById('run-button').addEventListener('click', executeCode);
+
+            // F5 shortcut
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'F5') {
+                    e.preventDefault();
+                    executeCode();
+                }
+            });
+
+            // Track cursor position
+            editorContent.addEventListener('click', updateCursorPosition);
+            editorContent.addEventListener('keyup', updateCursorPosition);
+        }
+
+        // Execute Code
+        function executeCode() {
+            clearOutput();
+            
+            const code = editorContent.textContent;
+            let result;
+            
+            if (currentEditor === 'zpp') {
+                const runtime = new ZppRuntime();
+                result = runtime.execute(code);
+            } else {
+                const runtime = new ZLangHueRuntime();
+                result = runtime.execute(code);
+            }
+            
+            // Display output
+            result.output.forEach(message => {
+                const div = document.createElement('div');
+                div.className = 'zpp-output';
+                div.textContent = message;
+                outputContent.appendChild(div);
+            });
+            
+            // Display errors
+            if (result.errors.length > 0) {
+                document.querySelector('.output-tab[data-tab="errors"]').click();
+                result.errors.forEach(error => {
+                    const div = document.createElement('div');
+                    div.className = 'zpp-error';
+                    div.textContent = `Line ${error.lineNumber}: ${error.message}`;
+                    errorContent.appendChild(div);
+                });
+            }
+        }
+
+        // Helper Functions
+        function clearOutput() {
+            outputContent.innerHTML = '';
+            errorContent.innerHTML = '';
+            document.querySelector('.output-tab[data-tab="output"]').click();
+        }
+
+        function updateCursorPosition() {
+            const selection = window.getSelection();
+            if (!selection.rangeCount) return;
+            
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(editorContent);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            
+            const text = preCaretRange.toString();
+            const lines = text.split('\n');
+            const lineNumber = lines.length;
+            const columnNumber = lines[lines.length - 1].length + 1;
+            
+            document.getElementById('position-indicator').textContent = `Ln ${lineNumber}, Col ${columnNumber}`;
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            setupEventListeners();
+            editorContent.textContent = initialContent.zpp;
+            applySyntaxHighlighting();
+            editorContent.focus();
+            updateCursorPosition();
+        });
+    </script>
+</body>
+</html>
