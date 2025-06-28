@@ -3,760 +3,903 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Z++ Editor | Z++ Update</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <title>Z++ Language Editor (VS Code Layout)</title>
+    <!-- Tailwind CSS CDN for styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        :root {
-            --bg-dark: #1e1e1e;
-            --editor-bg: #252526;
-            --text-light: #d4d4d4;
-            --accent-blue: #569cd6;
-            --accent-green: #4ec9b0;
-            --accent-red: #f48771;
-            --accent-purple: #c586c0;
-            --accent-update: #b63030;
-            --border-dark: #3c3c3c;
-            --terminal-bg: #1a1a1a;
-        }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* Custom font for Inter */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
         body {
-            font-family: 'Fira Code', monospace;
-            background-color: var(--bg-dark);
-            color: var(--text-light);
-            height: 100vh;
-            display: flex;
+            font-family: 'Inter', sans-serif;
+            background-color: #1E1E1E; /* VS Code dark background */
+            color: #D4D4D4; /* VS Code default text color */
+        }
+        .app-container { /* Main wrapper for the entire page content */
+            max-width: 1000px; /* Wider container for editor layout */
+            margin: 2rem auto;
+            padding: 1.5rem;
+            background-color: #252526; /* VS Code panel/sidebar background */
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            display: flex; /* Use flexbox for overall layout */
             flex-direction: column;
-            overflow: hidden;
+            gap: 1.5rem; /* Spacing between sections */
         }
 
-        #app-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
+        /* Styles for the "Concepts Explained" section */
+        .concepts-section {
+            padding: 1.5rem;
+            background-color: #2D2D2D; /* Slightly different background for this section */
+            border-radius: 0.5rem;
+            box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .concepts-section .inner-card {
+            background-color: #3C3C3C; /* Even lighter background for individual cards */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
-        .header {
-            padding: 12px 20px;
-            background-color: var(--editor-bg);
-            border-bottom: 1px solid var(--border-dark);
+
+        /* VS Code-like Editor Window styles */
+        .vscode-editor-window {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
+            background-color: #1E1E1E; /* Editor background */
+            border: 1px solid #3C3C3C; /* VS Code border color */
+            border-radius: 0.25rem;
+            min-height: 500px; /* Minimum height for the editor window */
+            overflow: hidden; /* Hide overflow from rounded corners */
+        }
+
+        .top-bar {
+            background-color: #2D2D2D; /* VS Code tab bar background */
+            border-bottom: 1px solid #3C3C3C;
+            padding: 0.5rem 1rem;
+            display: flex;
             align-items: center;
         }
 
-        .title {
-            font-size: 1.2rem;
-            color: var(--accent-update);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .version-badge {
-            background-color: var(--accent-update);
-            color: white;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-size: 0.8rem;
-        }
-
-        .language-tabs {
-            display: flex;
-            gap: 10px;
-        }
-
-        .lang-tab {
-            padding: 6px 12px;
-            background-color: var(--border-dark);
-            border: none;
-            border-radius: 4px;
-            color: var(--text-light);
+        .file-tab {
+            background-color: #1E1E1E; /* Active tab background */
+            color: #D4D4D4;
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.25rem 0.25rem 0 0;
+            font-size: 0.875rem;
+            margin-right: 0.5rem;
             cursor: pointer;
-            font-family: 'Fira Code', monospace;
-        }
-
-        .lang-tab.active {
-            background-color: var(--accent-update);
-            color: white;
-        }
-
-        .button {
-            background-color: var(--accent-update);
-            color: white;
-            border: none;
-            padding: 6px 12px;
-            border-radius: 3px;
-            cursor: pointer;
-            font-family: 'Fira Code', monospace;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-
-        .main-content {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
-
-        .editor-wrapper {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .editor-container {
-            flex: 1;
-            display: none;
+            border: 1px solid #3C3C3C;
+            border-bottom: none;
             position: relative;
-            overflow: hidden;
+            top: 1px; /* Align with bottom border of top-bar */
+        }
+        .file-tab:hover {
+            background-color: #252526; /* Hover color for tabs */
         }
 
-        .editor-container.active {
+        .editor-container { /* Holds CodeMirror and buttons */
+            flex-grow: 1; /* Editor takes available space */
             display: flex;
             flex-direction: column;
+            padding: 1rem; /* Padding inside the editor pane */
         }
 
-        #editor-content {
-            width: 100%;
-            height: 100%;
-            background-color: var(--editor-bg);
-            color: var(--text-light);
-            border: none;
-            padding: 15px;
-            font-family: 'Fira Code', monospace;
-            font-size: 14px;
-            line-height: 1.5;
-            tab-size: 4;
-            white-space: pre-wrap;
-            outline: none;
-            overflow-y: auto;
+        .toolbar-buttons {
+            display: flex;
+            justify-content: flex-end; /* Align buttons to the right */
+            gap: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid #3C3C3C; /* Separator above terminal */
+            margin-bottom: 1rem;
+        }
+        .toolbar-buttons button {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+            border-radius: 0.25rem;
         }
 
-        #output-container {
-            height: 200px;
-            background-color: var(--terminal-bg);
-            border-top: 1px solid var(--border-dark);
+        .terminal-pane {
+            background-color: #1E1E1E; /* Terminal background */
+            border-top: 1px solid #3C3C3C; /* Separator from editor */
+            min-height: 150px; /* Minimum height for terminal */
+            max-height: 300px; /* Max height for terminal */
+            overflow-y: auto; /* Scrollable terminal */
             display: flex;
             flex-direction: column;
+            flex-shrink: 0; /* Prevents terminal from shrinking too much */
         }
 
-        .output-tabs {
-            display: flex;
-            background-color: var(--editor-bg);
-            border-bottom: 1px solid var(--border-dark);
+        .terminal-header {
+            background-color: #2D2D2D; /* Terminal tab bar background */
+            padding: 0.5rem 1rem;
+            border-bottom: 1px solid #3C3C3C;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #D4D4D4;
+            cursor: default;
         }
 
-        .output-tab {
-            padding: 8px 16px;
-            cursor: pointer;
-            border-right: 1px solid var(--border-dark);
+        .output-area {
+            flex-grow: 1;
+            background-color: #1E1E1E; /* Editor background */
+            color: #D4D4D4;
+            padding: 0.75rem;
+            border-radius: 0; /* Remove border-radius here, applied to parent */
+            min-height: 0; /* Allow flex-grow to control height */
+            box-shadow: none; /* Remove box-shadow here */
+            font-size: 0.85rem; /* Smaller font for terminal */
+        }
+        
+        /* CodeMirror styles - Adjusted for VS Code like appearance */
+        .CodeMirror {
+            border: 1px solid #3C3C3C; /* VS Code border color */
+            border-radius: 0.25rem; /* Slight rounded corners */
+            font-size: 0.875rem; /* text-sm */
+            height: 12rem; /* Fixed height for the editor */
+            line-height: 1.5; /* Better line spacing */
+            flex-grow: 1; /* Allow CodeMirror to take available space */
+        }
+        .CodeMirror-scroll {
+            background-color: #1E1E1E; /* VS Code editor background */
+            color: #D4D4D4; /* Default text color */
+        }
+        .CodeMirror-gutters {
+            background-color: #2D2D2D; /* VS Code gutter background */
+            border-right: 1px solid #3C3C3C;
+        }
+        .CodeMirror-linenumbers {
+            color: #858585; /* VS Code line number color */
         }
 
-        .output-tab.active {
-            background-color: var(--terminal-bg);
-            border-bottom: 2px solid var(--accent-update);
+        /* Active line background */
+        .CodeMirror-activeline-background {
+            background: #2A2A2A; /* Slightly lighter than editor background for active line */
         }
 
-        .output-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 10px;
-            display: none;
+        /* Cursor color */
+        .CodeMirror-cursor {
+            border-left: 1px solid #D4D4D4; /* White cursor */
         }
 
-        .output-content.active {
-            display: block;
-        }
+        /* Z++ Syntax Highlighting - These will be largely overridden by the theme but kept for custom elements */
+        .cm-keyword { color: #569CD6; } /* VS Code Blue for keywords */
+        .cm-operator { color: #D4D4D4; } /* White for operators */
+        .cm-number { color: #B5CEA8; } /* Light green for numbers */
+        .cm-string { color: #CE9178; } /* Orange-brown for strings */
+        .cm-variable-2 { color: #9CDCFE; } /* Light blue for -variable- names */
+        .cm-builtin { color: #4EC9B0; } /* Teal for built-in functions */
+        .cm-comment { color: #6A9955; font-style: italic; } /* Green for comments */
+        .cm-punctuation { color: #D4D4D4; } /* White for semicolons etc. */
+        .cm-bracket { color: #D4D4D4; } /* White for brackets etc. */
+        .cm-error { color: #F44747; } /* Red for errors */
+        .cm-variable-3 { color: #D7BA7D; } /* Yellow for Module.FuncName */
 
-        .status-bar {
-            padding: 5px 15px;
-            background-color: var(--editor-bg);
-            border-top: 1px solid var(--border-dark);
-            font-size: 0.8rem;
-            display: flex;
-            justify-content: space-between;
-        }
+        /* Override Dracula defaults where needed or for custom tokens */
+        .cm-s-dracula .cm-keyword { color: #FF79C6; } /* Dracula pink for keywords */
+        .cm-s-dracula .cm-operator { color: #FFB86C; } /* Dracula orange for operators */
+        .cm-s-dracula .cm-string { color: #F1FA8C; } /* Dracula yellow for strings */
+        .cm-s-dracula .cm-number { color: #BD93F9; } /* Dracula purple for numbers */
+        .cm-s-dracula .cm-variable-2 { color: #50FA7B; } /* Dracula green for -variables- */
+        .cm-s-dracula .cm-builtin { color: #8BE9FD; } /* Dracula cyan for built-ins */
+        .cm-s-dracula .cm-comment { color: #6272A4; } /* Dracula gray for comments */
+        .cm-s-dracula .cm-variable-3 { color: #FFB86C; } /* Dracula orange for Module.Func */
 
-        .zpp-output {
-            padding: 8px;
-            margin: 5px 0;
-            background-color: rgba(182, 48, 48, 0.1);
-            border-left: 3px solid var(--accent-update);
-        }
-
-        .zpp-error {
-            padding: 8px;
-            margin: 5px 0;
-            background-color: rgba(244, 135, 113, 0.1);
-            border-left: 3px solid var(--accent-red);
-        }
-
-        /* Syntax highlighting classes */
-        .keyword {
-            color: var(--accent-blue);
-            font-weight: 500;
-        }
-
-        .string {
-            color: var(--accent-green);
-        }
-
-        .number {
-            color: var(--accent-purple);
-        }
-
-        .comment {
-            color: #6A9955;
-        }
-
-        .operator {
-            color: var(--accent-red);
-        }
-
-        .variable {
-            color: #9CDCFE;
-        }
-
-        .function {
-            color: #DCDCAA;
-        }
     </style>
+    <!-- CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.css">
+    <!-- CodeMirror Dracula Theme CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/theme/dracula.min.css">
 </head>
-<body>
-    <div id="app-container">
-        <div class="header">
-            <h1 class="title">
-                <i class="fas fa-code"></i> Z++ Editor
-                <span class="version-badge">Z++ Update</span>
-            </h1>
-            <div class="language-tabs">
-                <button class="lang-tab active" data-lang="zpp">Z++</button>
-                <button class="lang-tab" data-lang="zlang">Z/Hue</button>
-            </div>
-            <button class="button" id="run-button">
-                <i class="fas fa-play"></i> Run (F5)
-            </button>
-        </div>
-        
-        <div class="main-content">
-            <div class="editor-wrapper">
-                <div id="zpp-editor" class="editor-container active">
-                    <div id="editor-content" contenteditable="true"></div>
+<body class="p-4 md:p-8">
+    <div class="app-container">
+        <!-- Introduction and Concepts Section -->
+        <div class="concepts-section">
+            <h1 class="text-3xl font-bold text-center mb-6 text-indigo-400">Welcome to Z++</h1>
+            <p class="mb-6 text-lg text-gray-300">
+                This is a conceptual demonstration of the Z++ language, showcasing its unique syntax and features.
+                You can enter Z++-like code in the console below and see a simulated output based on the rules we've defined.
+            </p>
+
+            <h2 class="text-2xl font-semibold text-indigo-300 mb-4">Z++ Concepts Explained</h2>
+            <div class="space-y-4 text-gray-300">
+                <!-- Define Keyword and Naming -->
+                <div class="inner-card">
+                    <h3 class="font-bold text-indigo-200">The <code class="bg-gray-800 p-1 rounded">Define</code> Keyword and <code class="bg-gray-800 p-1 rounded">- -</code> Naming</h3>
+                    <p>
+                        In Z++, <strong class="text-indigo-300">`Define`</strong> is the universal keyword for introducing *all* named entities – variables, constants, or functions. The unique <strong class="text-indigo-300">`- -`</strong> delimiters are used to wrap the name of the entity, like so: <code class="bg-gray-800 p-1 rounded">Define -myVariable- = 123;</code> or <code class="bg-gray-800 p-1 rounded">Define -myFunction-(param) { ... }</code>. The scope of these defined entities depends on where they are declared.
+                    </p>
                 </div>
-                
-                <div id="output-container">
-                    <div class="output-tabs">
-                        <div class="output-tab active" data-tab="output">Output</div>
-                        <div class="output-tab" data-tab="errors">Errors</div>
-                    </div>
-                    <div class="output-content active" id="output-content"></div>
-                    <div class="output-content" id="error-content"></div>
+                <!-- Define.log for Output -->
+                <div class="inner-card">
+                    <h3 class="font-bold text-indigo-200">Output with <code class="bg-gray-800 p-1 rounded">Define.log</code></h3>
+                    <p>
+                        For output, Z++ uses <strong class="text-indigo-300">`Define.log`</strong>. This isn't just a simple print statement; it's conceptualized as defining something for display. It supports custom output levels:
+                        <ul class="list-disc list-inside ml-4 mt-2">
+                            <li><code class="bg-gray-800 p-1 rounded">Define.log "Hello!";</code> (Default level 1: Normal output)</li>
+                            <li><code class="bg-gray-800 p-1 rounded">Define.log (0) "Silent message";</code> (Level 0: No visible output)</li>
+                            <li><code class="bg-gray-800 p-1 rounded">Define.log (2) "Error detected!";</code> (Level 2: Normal output with error checking indication)</li>
+                        </ul>
+                    </p>
+                </div>
+                <!-- Mini-Functions with =? -->
+                <div class="inner-card">
+                    <h3 class="font-bold text-indigo-200">Mini-Functions with <code class="bg-gray-800 p-1 rounded"> =? </code></h3>
+                    <p>
+                        Z++ offers compact 'mini-functions' for inline operations. These are declared using <strong class="text-indigo-300">`MiniFunc`</strong> (or similar) and use the special <strong class="text-indigo-300">` =? `</strong> operator to explicitly define their return value, e.g., <code class="bg-gray-800 p-1 rounded">MiniFunc -square-(x) =? x * x;</code>.
+                    </p>
+                </div>
+                <!-- Conditional Operations with =| -->
+                <div class="inner-card">
+                    <h3 class="font-bold text-indigo-200">Conditional Operations with <code class="bg-gray-800 p-1 rounded"> =| </code></h3>
+                    <p>
+                        The <strong class="text-indigo-300">` =| `</strong> operator facilitates conditional assignment and output, with a "stop midway" capability. If the operation on the right-hand side succeeds, the value is assigned and potentially outputted. If a predefined 'stop' condition is met, the assignment and output are skipped, and execution flow can be altered. Example: <code class="bg-gray-800 p-1 rounded">Define -result- =| riskyOperation();</code>
+                    </p>
+                </div>
+                <!-- Extending with ZmPut and 'Zuss' Addons -->
+                <div class="inner-card">
+                    <h3 class="font-bold text-indigo-200">Extending with <code class="bg-gray-800 p-1 rounded">ZmPut</code> and 'Zuss' Addons</h3>
+                    <p>
+                        Z++ can be extended with custom 'Zuss' addons using the <strong class="text-indigo-300">`ZmPut`</strong> function (e.g., <code class="bg-gray-800 p-1 rounded">ZmPut "Zuss";</code>). These addons can introduce powerful features, such as the `Prev.log` logging system.
+                    </p>
+                    <p class="mt-2">
+                        <strong class="text-indigo-300">`Prev.log:`</strong> provides an advanced console with 2D output capabilities and error checking. It uses an access parameter (<strong class="text-indigo-300">`'X0'` to `'X10'`</strong>) as its first argument within the data list:
+                        <ul class="list-disc list-inside ml-4 mt-2">
+                            <li><code class="bg-gray-800 p-1 rounded">Prev.log: (['X0', "--Normal message--"]);</code> (Basic start output)</li>
+                            <li><code class="bg-gray-800 p-1 rounded">Prev.log: (['X2', ["--Row 1--", "--Row 2--"]]);</code> (2D output via 'X1'-'X9' if data is structured for it)</li>
+                            <li><code class="bg-gray-800 p-1 rounded">Prev.log: (['X10', "Value to check"]);</code> (Output with error checking)</li>
+                        </ul>
+                    </p>
+                    <p class="mt-2">
+                        'Zuss' addons can also contain custom modules, imported using <strong class="text-indigo-300">`module =!> -ModuleName- { ... }`</strong>, allowing for modular code organization within the addon.
+                    </p>
                 </div>
             </div>
         </div>
-        
-        <div class="status-bar">
-            <span id="status-message">Ready</span>
-            <span id="position-indicator">Ln 1, Col 1</span>
+
+        <!-- VS Code-like Editor Window -->
+        <div class="vscode-editor-window">
+            <div class="top-bar">
+                <span class="file-tab">main.zpp</span>
+            </div>
+            <div class="editor-container">
+                <label for="zpp-code-editor" class="block text-gray-300 text-lg font-medium mb-2">Enter Z++ Code:</label>
+                <div id="zpp-code-editor"></div>
+                <div class="toolbar-buttons">
+                    <button id="run-code" class="bg-indigo-600 text-white hover:bg-indigo-700 focus:ring-indigo-500">
+                        Run Z++ Code
+                    </button>
+                    <button id="reset-editor" class="bg-gray-600 text-white hover:bg-gray-700 focus:ring-gray-500">
+                        Reset Editor
+                    </button>
+                </div>
+            </div>
+            <div class="terminal-pane">
+                <div class="terminal-header">Output:</div>
+                <pre id="zpp-output" class="output-area"></pre>
+            </div>
         </div>
     </div>
 
+    <!-- CodeMirror JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/codemirror.min.js"></script>
+    <!-- CodeMirror Simple Mode for custom language definition -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/addon/mode/simple.min.js"></script>
+    <!-- CodeMirror Dracula Theme JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.1/theme/dracula.min.js"></script>
     <script>
-        // Language Definitions
-        const zppSyntax = {
-            keywords: [
-                'Define', 'Log', 'Function', 'Use', 'Z\\+\\+', 'mPort', 
-                'Module', 'MiniFunc', 'RuzzPut', 'if', 'else', 'while',
-                'for', 'return', 'break', 'continue', 'true', 'false', 'null'
-            ],
-            operators: ['\\+', '-', '\\*', '/', '=', '!=', '==', '<=', '>=', '<', '>'],
-            patterns: {
-                variable: /-(\w+)-/g,
-                string: /(["'`])(?:(?=(\\?))\2.)*?\1/g,
-                number: /\b\d+\b/g,
-                comment: /\/\/.*$/gm
-            }
-        };
-
-        const zlangSyntax = {
-            keywords: [
-                'Define', 'Show', 'Image', 'HT', 'Hue', 'Update',
-                'Open', 'Render', 'Import', 'Use', 'Function', 'Lmput'
-            ],
-            operators: ['\\|=', '=>', '=\\|', '\\|\\|', '==', '='],
-            patterns: {
-                special: /<-Z->|`[^`]*`|\[[^\]]*\]/g,
-                string: /(["'])(?:(?=(\\?))\2.)*?\1/g,
-                number: /\b\d+\b/g,
-                comment: /\/\/.*$/gm
-            }
-        };
-
-        // Editor State
-        let currentEditor = "zpp";
-        let currentSyntax = zppSyntax;
-        const editorContent = document.getElementById('editor-content');
-        const outputContent = document.getElementById('output-content');
-        const errorContent = document.getElementById('error-content');
-
-        // Set initial content based on current language
-        const initialContent = {
-            zpp: `// Z++ Code Example
-Define -main-(params) {
-    Define.Log {id = "example"};
-    
-    Define -int- = 2 + 2;
-    Define.Log "2 + 2 = " + -int-;
-    
-    Z++mPort = "Zuzz";
-    Use.Function(input) {
-        Define.Log "Processing: " + input;
-    }
-}`,
-            zlang: `// Z/Hue Code Example
-Define <-Z-> |=| \`Welcome to Z/Hue\` {
-    Show.hue => {
-        Image.import: 'hue.png'[Id == 1]
-        HT-1 =| [Hello World!]||
-    }
-    
-    Hue.Update -V1.0.1-
-    Hue.Open = "module.z"
-}`
-        };
-
-        // Simple Z++ Runtime
-        class ZppRuntime {
-            constructor() {
-                this.variables = {};
-                this.functions = {};
-                this.output = [];
-                this.errors = [];
+        // === Zuss Addon Class ===
+        class Zuss {
+            constructor(appendOutputFn, resolveVariableFn, evaluateExpressionFn) {
+                this.appendOutput = appendOutputFn;
+                this.resolveVariable = resolveVariableFn;
+                this.evaluateExpression = evaluateExpressionFn;
             }
 
-            execute(code) {
-                this.clearState();
-                const lines = code.split('\n');
-                
+            // Implementation of Prev.log:
+            log(argsString) {
+                let args = [];
                 try {
-                    for (let i = 0; i < lines.length; i++) {
-                        const line = lines[i].trim();
-                        if (!line || line.startsWith('//')) continue;
-                        
-                        if (this.isKeyword(line, 'Define') && line.includes('=')) {
-                            this.handleDefinition(line, i+1);
-                        } else if (this.isKeyword(line, 'Define.Log')) {
-                            this.handleLog(line, i+1);
-                        } else if (this.isKeyword(line, 'Use.Function')) {
-                            this.handleFunction(line, i+1);
-                        } else if (this.isKeyword(line, 'Z++mPort')) {
-                            this.handlePort(line, i+1);
-                        }
-                    }
-                } catch (error) {
-                    this.errors.push({
-                        line: error.line || 'Unknown',
-                        message: error.message || 'Unknown error',
-                        lineNumber: error.lineNumber || 0
-                    });
-                }
-
-                return {
-                    output: this.output,
-                    errors: this.errors
-                };
-            }
-
-            isKeyword(line, keyword) {
-                const regex = new RegExp(`(^|\\s)${keyword}(\\s|\\(|$)`);
-                return regex.test(line);
-            }
-
-            handleDefinition(line, lineNumber) {
-                const match = line.match(/Define\s+-(\w+)-\s*=\s*(.+)/);
-                if (!match) {
-                    throw { message: 'Invalid definition', line, lineNumber };
-                }
-                
-                const varName = match[1];
-                const value = match[2].replace(/;$/, '');
-                
-                if (value.match(/^\d+\s*[\+\-\*\/]\s*\d+$/)) {
-                    this.variables[varName] = eval(value);
-                } else {
-                    this.variables[varName] = value.replace(/["']/g, '');
-                }
-                
-                this.output.push(`Variable defined: ${varName} = ${this.variables[varName]}`);
-            }
-
-            handleLog(line, lineNumber) {
-                const content = line.match(/Define\.Log\s+(.+)/)[1];
-                let message = content.replace(/[{}"';]/g, '');
-                
-                message = message.replace(/-\w+-/g, match => {
-                    const varName = match.replace(/-/g, '');
-                    return this.variables[varName] || match;
-                });
-                
-                this.output.push(`LOG: ${message}`);
-            }
-
-            handleFunction(line, lineNumber) {
-                const match = line.match(/Use\.Function\((\w+)\)/);
-                if (!match) {
-                    throw { message: 'Invalid function syntax', line, lineNumber };
-                }
-                
-                const param = match[1];
-                this.functions[param] = true;
-                this.output.push(`Function defined with parameter: ${param}`);
-            }
-
-            handlePort(line, lineNumber) {
-                const match = line.match(/Z\+\+mPort\s*=\s*"([^"]+)"/);
-                if (!match) {
-                    throw { message: 'Invalid port syntax', line, lineNumber };
-                }
-                
-                const port = match[1];
-                this.output.push(`Z++ port configured: ${port}`);
-            }
-
-            clearState() {
-                this.variables = {};
-                this.functions = {};
-                this.output = [];
-                this.errors = [];
-            }
-        }
-
-        // Simple Z/Hue Runtime
-        class ZLangHueRuntime {
-            constructor() {
-                this.output = [];
-                this.errors = [];
-            }
-
-            execute(code) {
-                this.clearState();
-                const lines = code.split('\n');
-                
-                try {
-                    for (let i = 0; i < lines.length; i++) {
-                        const line = lines[i].trim();
-                        if (!line || line.startsWith('//')) continue;
-                        
-                        if (this.isKeyword(line, 'Define <-Z->')) {
-                            this.handleZDefinition(line, i+1);
-                        } else if (this.isKeyword(line, 'Show.hue')) {
-                            this.handleShowHue(line, i+1);
-                        } else if (this.isKeyword(line, 'Hue.')) {
-                            this.handleHueCommand(line, i+1);
-                        }
-                    }
-                } catch (error) {
-                    this.errors.push({
-                        line: error.line || 'Unknown',
-                        message: error.message || 'Unknown error',
-                        lineNumber: error.lineNumber || 0
-                    });
-                }
-
-                return {
-                    output: this.output,
-                    errors: this.errors
-                };
-            }
-
-            isKeyword(line, keyword) {
-                const regex = new RegExp(`(^|\\s)${keyword.replace('.', '\\.')}`);
-                return regex.test(line);
-            }
-
-            handleZDefinition(line, lineNumber) {
-                const match = line.match(/`([^`]+)`/);
-                if (!match) {
-                    throw { message: 'Invalid Z definition', line, lineNumber };
-                }
-                this.output.push(`Z Module initialized: ${match[1]}`);
-            }
-
-            handleShowHue(line, lineNumber) {
-                this.output.push("Showing Hue content:");
-                
-                if (line.includes("Image.import")) {
-                    const match = line.match(/'([^']+)'/);
-                    if (match) {
-                        this.output.push(`- Image: ${match[1]}`);
-                    }
-                }
-                
-                if (line.includes("HT-")) {
-                    const match = line.match(/\[([^\]]+)\]/);
-                    if (match) {
-                        this.output.push(`- Text: ${match[1]}`);
-                    }
-                }
-            }
-
-            handleHueCommand(line, lineNumber) {
-                if (this.isKeyword(line, 'Hue.Update')) {
-                    const match = line.match(/-([\w.]+)-/);
-                    this.output.push(`Hue version updated to: ${match ? match[1] : 'unknown'}`);
-                } else if (this.isKeyword(line, 'Hue.Open')) {
-                    const match = line.match(/"([^"]+)"/);
-                    this.output.push(`Hue module opened: ${match ? match[1] : 'unknown'}`);
-                } else {
-                    this.output.push(`Executed Hue command: ${line}`);
-                }
-            }
-
-            clearState() {
-                this.output = [];
-                this.errors = [];
-            }
-        }
-
-        // Syntax Highlighting
-        function applySyntaxHighlighting() {
-            // Save cursor position
-            const selection = window.getSelection();
-            const range = selection.rangeCount > 0 ? selection.getRangeAt(0) : null;
-            const cursorPos = range ? range.startOffset : 0;
-            const cursorNode = range ? range.startContainer : editorContent;
-            
-            // Get plain text content
-            const text = editorContent.textContent;
-            let highlighted = text;
-            
-            // Apply comments first
-            highlighted = highlighted.replace(
-                currentSyntax.patterns.comment, 
-                match => `<span class="comment">${match}</span>`
-            );
-            
-            // Apply strings
-            highlighted = highlighted.replace(
-                currentSyntax.patterns.string, 
-                match => `<span class="string">${match}</span>`
-            );
-            
-            // Apply numbers
-            highlighted = highlighted.replace(
-                currentSyntax.patterns.number, 
-                match => `<span class="number">${match}</span>`
-            );
-            
-            // Apply keywords
-            currentSyntax.keywords.forEach(keyword => {
-                const regex = new RegExp(`(^|\\s)(${keyword})(?=\\s|\\(|;|$)`, 'g');
-                highlighted = highlighted.replace(
-                    regex, 
-                    (match, p1, p2) => `${p1}<span class="keyword">${p2}</span>`
-                );
-            });
-            
-            // Apply operators
-            currentSyntax.operators.forEach(op => {
-                const regex = new RegExp(`(${op.replace(/\\/g, '')})`, 'g');
-                highlighted = highlighted.replace(
-                    regex, 
-                    match => `<span class="operator">${match}</span>`
-                );
-            });
-            
-            // Special patterns for Z++
-            if (currentEditor === 'zpp') {
-                highlighted = highlighted.replace(
-                    currentSyntax.patterns.variable, 
-                    match => `<span class="variable">${match}</span>`
-                );
-            }
-            
-            // Special patterns for Z/Hue
-            if (currentEditor === 'zlang') {
-                highlighted = highlighted.replace(
-                    currentSyntax.patterns.special, 
-                    match => `<span class="function">${match}</span>`
-                );
-            }
-            
-            // Update editor with highlighted content
-            editorContent.innerHTML = highlighted;
-            
-            // Restore cursor position
-            if (range) {
-                try {
-                    const newRange = document.createRange();
-                    const textNodes = getTextNodes(editorContent);
-                    let pos = 0;
-                    let targetNode = null;
-                    let targetOffset = 0;
-                    
-                    for (const node of textNodes) {
-                        if (pos + node.length >= cursorPos) {
-                            targetNode = node;
-                            targetOffset = cursorPos - pos;
-                            break;
-                        }
-                        pos += node.length;
-                    }
-                    
-                    if (targetNode) {
-                        newRange.setStart(targetNode, Math.min(targetOffset, targetNode.length));
-                        newRange.collapse(true);
-                        selection.removeAllRanges();
-                        selection.addRange(newRange);
-                    }
+                    // Attempt to parse arguments as a JSON-like array
+                    // Replace single quotes and -variable- with double quotes for JSON.parse
+                    let jsonString = `[${argsString.replace(/'/g, '"').replace(/--([a-zA-Z0-9_]+)--/g, (match, p1) => {
+                        const resolved = this.resolveVariable(p1);
+                        return resolved !== undefined ? JSON.stringify(resolved) : match;
+                    })}]`;
+                    args = JSON.parse(jsonString);
                 } catch (e) {
-                    console.log("Couldn't restore cursor position");
+                    this.appendOutput(`Error parsing Prev.log arguments: ${e.message}`, 'error');
+                    return;
+                }
+
+                let accessParam = args[0];
+                let logData = args.slice(1);
+
+                this.appendOutput(`(Access: ${accessParam})`, 'zuss');
+
+                if (accessParam === 'X0') {
+                    this.appendOutput(`  Output: ${logData.map(item => typeof item === 'string' ? item.replace(/--/g, '') : item).join(', ')}`, 'zuss');
+                } else if (accessParam >= 'X1' && accessParam <= 'X9') { // Corrected: X0 is handled separately, only X1-X9 for 2D
+                    this.appendOutput(`  (Simulated 2D Output for ${accessParam})`, 'zuss');
+                    if (Array.isArray(logData[0]) && logData[0].every(Array.isArray)) {
+                        logData[0].forEach((row, rowIndex) => {
+                            this.appendOutput(`  Row ${rowIndex + 1}: [ ${row.map(item => {
+                                return typeof item === 'string' ? item.replace(/-([a-zA-Z0-9_]+)-/g, (match, p1) => {
+                                    const resolved = this.resolveVariable(p1);
+                                    return resolved !== undefined ? resolved : match;
+                                }).replace(/--/g, '') : item;
+                            }).join(' | ')} ]`, 'zuss');
+                        });
+                    } else {
+                        this.appendOutput(`  (Data provided doesn't look like a 2D array for ${accessParam}: ${JSON.stringify(logData)})`, 'zuss');
+                    }
+                } else if (accessParam === 'X10') {
+                    this.appendOutput(`  Output (with Error Check): ${logData.map(item => typeof item === 'string' ? item.replace(/--/g, '') : item).join(', ')}`, 'zuss');
+                } else {
+                    this.appendOutput(`  Unknown access parameter for Prev.log: ${accessParam}`, 'error');
                 }
             }
         }
+        // === End Zuss Addon Class ===
 
-        // Helper function to get all text nodes
-        function getTextNodes(node) {
-            const textNodes = [];
-            const walker = document.createTreeWalker(
-                node,
-                NodeFilter.SHOW_TEXT,
-                null,
-                false
-            );
-            
-            let textNode;
-            while (textNode = walker.nextNode()) {
-                textNodes.push(textNode);
-            }
-            
-            return textNodes;
-        }
 
-        // Setup Event Listeners
-        function setupEventListeners() {
-            // Language tabs
-            document.querySelectorAll('.lang-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.lang-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    currentEditor = tab.dataset.lang;
-                    currentSyntax = currentEditor === 'zpp' ? zppSyntax : zlangSyntax;
-                    
-                    // Update editor content
-                    editorContent.textContent = initialContent[currentEditor];
-                    applySyntaxHighlighting();
-                });
-            });
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOMContentLoaded fired!"); // Debugging point 1
+            // Define the custom Z++ CodeMirror mode
+            CodeMirror.defineSimpleMode("zplusplus", {
+                start: [
+                    // Keywords
+                    {regex: /Define(?=\s)/, token: "keyword"},
+                    {regex: /Module(?=\s)/, token: "keyword"},
+                    {regex: /Scope(?=\s)/, token: "keyword"},
+                    {regex: /Func(?=\s)/, token: "keyword"},
+                    {regex: /Defun(?=\s)/, token: "keyword"},
+                    {regex: /MiniFunc(?=\s)/, token: "keyword"},
+                    {regex: /ZmPut(?=\s)/, token: "keyword"},
+                    {regex: /Return(?=\s)/, token: "keyword"},
+                    {regex: /module =!>/, token: "keyword"},
+                    {regex: /ToString(?=\s*\(|\s*;)/, token: "keyword"}, // ToString function call or declaration
 
-            // Editor input
-            editorContent.addEventListener('input', () => {
-                // Use setTimeout to allow the DOM to update before applying highlighting
-                setTimeout(applySyntaxHighlighting, 0);
-                updateCursorPosition();
-            });
+                    // Operators
+                    {regex: /=\?/, token: "operator"}, // =?
+                    {regex: /=\|/, token: "operator"}, // =|
+                    {regex: /=/, token: "operator"}, // regular assignment
+                    {regex: /\+\-|-\+|\*|\/|\+\=|\-\=|\*=|%=/, token: "operator"}, // Basic math operators, compound assignments
 
-            // Output tabs
-            document.querySelectorAll('.output-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.output-tab').forEach(t => t.classList.remove('active'));
-                    document.querySelectorAll('.output-content').forEach(c => c.classList.remove('active'));
-                    
-                    tab.classList.add('active');
-                    document.getElementById(`${tab.dataset.tab}-content`).classList.add('active');
-                });
-            });
+                    // Numbers
+                    {regex: /\b-?\d+(?:\.\d+)?\b/, token: "number"}, // Handles integers and floats
 
-            // Run button
-            document.getElementById('run-button').addEventListener('click', executeCode);
+                    // Strings (double or single quoted)
+                    {regex: /"(?:[^\\]|\\.)*?"/, token: "string"},
+                    {regex: /'(?:[^\\]|\\.)*?'/, token: "string"},
 
-            // F5 shortcut
-            document.addEventListener('keydown', (e) => {
-                if (e.key === 'F5') {
-                    e.preventDefault();
-                    executeCode();
+                    // -variable- names (these are a custom 'variable-2' token)
+                    {regex: /--([a-zA-Z0-9_]+)--/, token: "variable-2"},
+
+                    // Special functions/addon access
+                    {regex: /Define\.log/, token: "builtin"},
+                    {regex: /Prev\.log:/, token: "builtin"},
+                    // Module.Function (e.g., MyModule.-myFunc-)
+                    {regex: /([a-zA-Z0-9_]+)\.--([a-zA-Z0-9_]+)--/, token: "variable-3"},
+
+                    // Comments (single line)
+                    {regex: /\/\/.*$/, token: "comment"},
+                    // Basic block comments (non-nesting for simple mode)
+                    {regex: /\/\*/, token: "comment", next: "comment"},
+
+                    // Parentheses, braces, brackets, semicolon
+                    {regex: /[\(\)\[\]\{\}]/, token: "bracket"},
+                    {regex: /;/, token: "punctuation"},
+                ],
+                // State for block comments
+                comment: [
+                    {regex: /.*?\*\//, token: "comment", next: "start"},
+                    {regex: /.*/, token: "comment"}
+                ],
+                // The meta property specifies where to find the styles for the mode
+                meta: {
+                    dontIndentStates: ["comment"],
+                    lineComment: "//"
                 }
             });
 
-            // Track cursor position
-            editorContent.addEventListener('click', updateCursorPosition);
-            editorContent.addEventListener('keyup', updateCursorPosition);
-        }
 
-        // Execute Code
-        function executeCode() {
-            clearOutput();
-            
-            const code = editorContent.textContent;
-            let result;
-            
-            if (currentEditor === 'zpp') {
-                const runtime = new ZppRuntime();
-                result = runtime.execute(code);
-            } else {
-                const runtime = new ZLangHueRuntime();
-                result = runtime.execute(code);
-            }
-            
-            // Display output
-            result.output.forEach(message => {
-                const div = document.createElement('div');
-                div.className = 'zpp-output';
-                div.textContent = message;
-                outputContent.appendChild(div);
+            // Get references to DOM elements
+            const runCodeButton = document.getElementById('run-code');
+            const resetEditorButton = document.getElementById('reset-editor');
+            const zppOutputDiv = document.getElementById('zpp-output');
+            const zppCodeEditorDiv = document.getElementById('zpp-code-editor');
+
+            const defaultCode = `Define -myVar- = 10;
+Define -greeting- = 'Hello Z++!';
+Define.log -greeting-;
+Define.log (2) 'Checking variable: ' + -myVar-;
+
+ZmPut 'Zuss';
+Prev.log: (['X0', 'Zuss is ready!']);
+// Example of 2D output (conceptual, actual rendering depends on Zuss implementation)
+Prev.log: (['X5', [['--Item 1--', '--Item 2--'], ['--Item 3--', '--Item 4--', -myVar-]]]);
+
+Define -operationResult- =| 'success'; // Try 'fail' to see stop midway
+Define.log 'Result of conditional: ' + -operationResult-;
+
+MiniFunc -double-(x) =? x * 2;
+Define -doubledVar- = -double-(5);
+Define.log 'Doubled value: ' + -doubledVar-;
+
+Define -addNumbers-(a, b) {
+    Define -sum- = a + b;
+    Return -sum-;
+}
+Define -resultSum- = -addNumbers-( -myVar-, 20 );
+Define.log 'Sum from function: ' + -resultSum-;
+
+Module -MathLib- {
+    Define -PI- = 3.14159;
+    Define -circumference-(radius) {
+        Return 2 * -MathLib.PI- * radius;
+    }
+}
+Define -circleCircumference- = -MathLib.circumference-(5);
+Define.log 'Circle circumference: ' + -circleCircumference-;
+
+Define -numberToString- = ToString(123);
+Define.log 'Number as string: ' + -numberToString-;
+
+module =!> -MyZussModule- {
+    Define -greetUser-(name) {
+        Define.log 'Hello from Zuss module, ' + name + '!';
+    }
+}
+Define -MyZussModule.greetUser-('Alice');
+`;
+
+            // Initialize CodeMirror editor
+            const zppEditor = CodeMirror(zppCodeEditorDiv, {
+                value: defaultCode,
+                mode: "zplusplus", // Use the custom Z++ mode
+                lineNumbers: true, // Show line numbers
+                theme: "dracula", // Use the Dracula theme
+                indentUnit: 4,
+                tabSize: 4,
+                indentWithTabs: false,
+                smartIndent: true,
+                autoCloseBrackets: true,
             });
-            
-            // Display errors
-            if (result.errors.length > 0) {
-                document.querySelector('.output-tab[data-tab="errors"]').click();
-                result.errors.forEach(error => {
-                    const div = document.createElement('div');
-                    div.className = 'zpp-error';
-                    div.textContent = `Line ${error.lineNumber}: ${error.message}`;
-                    errorContent.appendChild(div);
-                });
-            }
-        }
 
-        // Helper Functions
-        function clearOutput() {
-            outputContent.innerHTML = '';
-            errorContent.innerHTML = '';
-            document.querySelector('.output-tab[data-tab="output"]').click();
-        }
+            // Z++ Interpreter Environment
+            let zppEnvironment = {
+                definedScope: {},
+                zuss: null, // Instance of the Zuss class
+                callStack: [],
+                currentModule: null,
 
-        function updateCursorPosition() {
-            const selection = window.getSelection();
-            if (!selection.rangeCount) return;
-            
-            const range = selection.getRangeAt(0);
-            const preCaretRange = range.cloneRange();
-            preCaretRange.selectNodeContents(editorContent);
-            preCaretRange.setEnd(range.endContainer, range.endOffset);
-            
-            const text = preCaretRange.toString();
-            const lines = text.split('\n');
-            const lineNumber = lines.length;
-            const columnNumber = lines[lines.length - 1].length + 1;
-            
-            document.getElementById('position-indicator').textContent = `Ln ${lineNumber}, Col ${columnNumber}`;
-        }
+                // Helper to append output to the console
+                appendOutput: function(message, type = 'info') {
+                    console.log(`[appendOutput called] Message: ${message}, Type: ${type}`); // Debugging point 5
+                    const prefix = {
+                        'info': '[Z++ Log] ',
+                        'debug': '[Z++ Debug] ',
+                        'warn': '[Z++ Warning] ',
+                        'error': '[Z++ Error] ',
+                        'system': '[Z++ System] ',
+                        'zuss': '[Zuss Prev.log] '
+                    }[type] || '';
+                    const color = {
+                        'info': 'text-gray-200',
+                        'debug': 'text-green-300',
+                        'warn': 'text-yellow-300',
+                        'error': 'text-red-500',
+                        'system': 'text-blue-300',
+                        'zuss': 'text-purple-300'
+                    }[type] || 'text-gray-200';
 
-        // Initialize
-        window.addEventListener('load', () => {
-            setupEventListeners();
-            editorContent.textContent = initialContent.zpp;
-            applySyntaxHighlighting();
-            editorContent.focus();
-            updateCursorPosition();
+                    zppOutputDiv.innerHTML += `<span class="${color}">${prefix}${message}</span><br>`;
+                    zppOutputDiv.scrollTop = zppOutputDiv.scrollHeight;
+                },
+
+                // Resolves a variable name, checking current scope then global scope
+                resolveVariable: function(varName) {
+                    const currentScope = this.callStack.length > 0 ? this.callStack[this.callStack.length - 1].localVars : this.definedScope;
+                    
+                    if (currentScope[varName] !== undefined) {
+                        return currentScope[varName];
+                    }
+                    if (this.definedScope[varName] !== undefined) {
+                        return this.definedScope[varName];
+                    }
+                    // Handle module-scoped variables e.g., MathLib.PI
+                    const moduleMatch = varName.match(/^([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)$/);
+                    if (moduleMatch && this.definedScope[moduleMatch[1]] && this.definedScope[moduleMatch[1]][moduleMatch[2]] !== undefined) {
+                         return this.definedScope[moduleMatch[1]][moduleMatch[2]];
+                    }
+                    return undefined; // Not found
+                },
+
+                // Evaluates a simple expression (numbers, strings, variables)
+                evaluateExpression: function(expr, scope) {
+                    expr = expr.trim();
+
+                    // ToString function call
+                    let toStringMatch = expr.match(/^ToString\((.+)\)$/);
+                    if (toStringMatch) {
+                        let innerExpr = toStringMatch[1];
+                        let value = this.evaluateExpression(innerExpr, scope);
+                        return String(value);
+                    }
+
+                    // String literal
+                    if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
+                        return expr.slice(1, -1);
+                    }
+                    // Number literal
+                    if (!isNaN(expr)) {
+                        return Number(expr);
+                    }
+                    // Boolean literal
+                    if (expr === 'true') return true;
+                    if (expr === 'false') return false;
+
+                    // Variable reference (e.g., -myVar-)
+                    let varMatch = expr.match(/^-([a-zA-Z0-9_]+)-$/);
+                    if (varMatch) {
+                        const varName = varMatch[1];
+                        const resolved = this.resolveVariable(varName);
+                        if (resolved === undefined) {
+                            this.appendOutput(`Undefined variable reference: -${varName}-`, 'error');
+                            throw new Error(`Undefined variable: -${varName}-`);
+                        }
+                        return resolved;
+                    }
+
+                    // Simple arithmetic (very basic for demo)
+                    try {
+                        // Replace Z++ variable syntax with JS variable names for eval
+                        let jsExpr = expr.replace(/-([a-zA-Z0-9_]+)-/g, (match, p1) => {
+                            const resolved = this.resolveVariable(p1);
+                            if (resolved === undefined) {
+                                this.appendOutput(`Undefined variable in expression: -${p1}-`, 'error');
+                                throw new Error(`Undefined variable: -${p1}-`);
+                            }
+                            return JSON.stringify(resolved); // Convert to JSON string for eval safety with strings
+                        });
+                        // eslint-disable-next-line no-eval
+                        return eval(jsExpr);
+                    } catch (e) {
+                        this.appendOutput(`Error evaluating expression '${expr}': ${e.message}`, 'error');
+                        throw e;
+                    }
+                },
+
+                // Processes a single line of Z++ code
+                processLine: function(line, currentScope = this.definedScope) {
+                    console.log(`Inside processLine: ${line}`); // Debugging point 4.2
+                    // Remove // comments
+                    line = line.split('//')[0].trim();
+                    if (line.length === 0) return null; // Skip empty lines after comment removal
+
+                    // 1. Handle `Define -variable- = value;` or `Define -module.variable- = value;`
+                    let matchDefineVar = line.match(/^Define -([a-zA-Z0-9_]+)- = (.+);$/);
+                    let matchDefineModuleVar = line.match(/^Define -([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)- = (.+);$/);
+
+                    if (matchDefineModuleVar) { // e.g. Define -MathLib.PI- = 3.14;
+                        let moduleName = matchDefineModuleVar[1];
+                        let varName = matchDefineModuleVar[2];
+                        let varValueExpr = matchDefineModuleVar[3];
+
+                        if (!this.definedScope[moduleName] || typeof this.definedScope[moduleName] !== 'object') {
+                            this.definedScope[moduleName] = {}; // Create module object if it doesn't exist
+                            this.appendOutput(`[Z++ Debug] Created module object: ${moduleName}`, 'debug');
+                        }
+                        try {
+                            const parsedValue = this.evaluateExpression(varValueExpr, currentScope);
+                            this.definedScope[moduleName][varName] = parsedValue;
+                            this.appendOutput(`[Z++ Debug] Defined module var: ${moduleName}.-${varName}- = ${JSON.stringify(parsedValue)}`, 'debug');
+                        } catch (e) {
+                             this.appendOutput(`Error defining module variable: ${e.message}`, 'error');
+                        }
+                        return null;
+                    }
+                    else if (matchDefineVar) { // e.g. Define -myVar- = 10;
+                        let varName = matchDefineVar[1];
+                        let varValueExpr = matchDefineVar[2];
+                        try {
+                            const parsedValue = this.evaluateExpression(varValueExpr, currentScope);
+                            // Assign to current scope (local for functions, global otherwise)
+                            currentScope[varName] = parsedValue;
+                            this.appendOutput(`[Z++ Debug] Defined: -${varName}- = ${JSON.stringify(currentScope[varName])}`, 'debug');
+                        } catch (e) {
+                            // Error message already appended by evaluateExpression
+                        }
+                        return null;
+                    }
+
+                    // 2. Handle `Define.log (level) "message";`
+                    let matchDefineLog = line.match(/^Define\.log (\((\d)\))? (.+);$/);
+                    if (matchDefineLog) {
+                        let level = matchDefineLog[2] ? parseInt(matchDefineLog[2]) : 1;
+                        let contentExpr = matchDefineLog[3].trim();
+                        
+                        try {
+                             // Evaluate content, which can be a variable or expression
+                             let content = this.evaluateExpression(contentExpr, currentScope);
+
+                            if (level === 0) {
+                                this.appendOutput(`(Output suppressed)`, 'info');
+                            } else if (level === 1) {
+                                this.appendOutput(`${content}`, 'info');
+                            } else if (level === 2) {
+                                this.appendOutput(`${content} (Error Check)`, 'warn');
+                            } else {
+                                this.appendOutput(`Unknown log level ${level}: ${content}`, 'warn');
+                            }
+                        } catch (e) {
+                            // Error already logged by evaluateExpression
+                        }
+                        return null;
+                    }
+
+                    // 3. Handle `ZmPut "Zuss";`
+                    let matchZmPut = line.match(/^ZmPut "Zuss";$/);
+                    if (matchZmPut) {
+                        // Instantiate Zuss class and make it available
+                        this.zuss = new Zuss(this.appendOutput.bind(this), this.resolveVariable.bind(this), this.evaluateExpression.bind(this));
+                        this.appendOutput(`Zuss addon loaded.`, 'system');
+                        return null;
+                    }
+
+                    // 4. Handle `Prev.log: ([access_parameter, data_to_log]);`
+                    let matchPrevLog = line.match(/^Prev\.log: \(\[(.+?)\]\);$/);
+                    if (matchPrevLog) {
+                        if (!this.zuss) { // Check if Zuss instance exists
+                            this.appendOutput(`Prev.log: called but Zuss addon not loaded. Use 'ZmPut "Zuss";' first.`, 'error');
+                            return null;
+                        }
+                        // Delegate logging to the Zuss instance
+                        this.zuss.log(matchPrevLog[1]);
+                        return null;
+                    }
+
+                    // 5. Handle `MiniFunc -name-(param) =? expression;`
+                    let matchMiniFunc = line.match(/^MiniFunc -([a-zA-Z0-9_]+)-\((.+?)\) =\? (.+);$/);
+                    if (matchMiniFunc) {
+                        let funcName = matchMiniFunc[1];
+                        let paramName = matchMiniFunc[2];
+                        let expression = matchMiniFunc[3];
+                        
+                        this.definedScope[funcName] = {
+                            type: 'MiniFunc',
+                            params: [paramName],
+                            body: expression, // Storing expression as body for mini-func
+                            execute: (args, scope) => {
+                                const tempScope = { ...scope, [paramName]: args[0] };
+                                return this.evaluateExpression(expression, tempScope);
+                            }
+                        };
+                        this.appendOutput(`Registered MiniFunc: -${funcName}-(${paramName}) =? ${expression}`, 'debug');
+                        return null;
+                    }
+
+                    // 6. Handle `Define -functionName-(params) { ... }` (function definition)
+                    let matchDefineFunc = line.match(/^Define -([a-zA-Z0-9_]+)-\((.*?)\)\s*\{(.+?)\}/s);
+                    if (matchDefineFunc) {
+                        let funcName = matchDefineFunc[1];
+                        let params = matchDefineFunc[2].split(',').map(p => p.trim()).filter(p => p.length > 0);
+                        let body = matchDefineFunc[3].trim();
+                        let bodyLines = body.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+
+                        let actualFuncName = funcName;
+                        let targetScope = this.definedScope;
+
+                        if (this.currentModule) {
+                            if (!targetScope[this.currentModule]) {
+                                targetScope[this.currentModule] = {};
+                            }
+                            targetScope = targetScope[this.currentModule];
+                            actualFuncName = funcName; // Store without module prefix in module object
+                        }
+                        
+                        targetScope[actualFuncName] = {
+                            type: 'Function',
+                            params: params,
+                            body: bodyLines,
+                            execute: (args, parentScope) => {
+                                let returnVal = undefined;
+                                const localScope = { ...parentScope }; // Start with parent scope variables
+                                
+                                // Map arguments to parameters in local scope
+                                params.forEach((param, i) => {
+                                    localScope[param] = args[i];
+                                });
+
+                                // Push new scope to stack
+                                this.callStack.push({ localVars: localScope, returnVal: undefined });
+
+                                for (let i = 0; i < bodyLines.length; i++) {
+                                    const bodyLine = bodyLines[i];
+                                    let result = this.processLine(bodyLine, localScope); // Execute line in local scope
+                                    if (result && result.type === 'Return') {
+                                        this.callStack[this.callStack.length - 1].returnVal = result.value;
+                                        returnVal = result.value;
+                                        break; // Exit function execution
+                                    }
+                                }
+                                this.callStack.pop(); // Pop scope from stack
+                                return returnVal;
+                            }
+                        };
+                        this.appendOutput(`Registered Function: -${funcName}-(${params.join(', ')})`, 'debug');
+                        return null;
+                    }
+
+                    // 7. Handle `Define -variable- =| expression;` (Conditional Assignment)
+                    let matchConditionalAssign = line.match(/^Define -([a-zA-Z0-9_]+)- =\| (.+);$/);
+                    if (matchConditionalAssign) {
+                        let varName = matchConditionalAssign[1];
+                        let exprValue = matchConditionalAssign[2].trim();
+                        let targetScope = this.callStack.length > 0 ? this.callStack[this.callStack.length - 1].localVars : this.definedScope;
+
+                        // Simulate 'stop midway' condition
+                        if (exprValue === "'fail'" || exprValue === '"fail"' || exprValue === 'null' || exprValue === 'undefined') {
+                            this.appendOutput(`Operation for -${varName}- stopped midway.`, 'warn');
+                            targetScope[varName] = null; // Set to null to indicate failure/no result
+                        } else {
+                            try {
+                                let assignedValue = this.evaluateExpression(exprValue, targetScope);
+                                targetScope[varName] = assignedValue;
+                                this.appendOutput(`Conditional assign: -${varName}- = ${JSON.stringify(assignedValue)}`, 'debug');
+                            } catch (e) {
+                                // Error already logged by evaluateExpression
+                                targetScope[varName] = null;
+                            }
+                        }
+                        return null;
+                    }
+
+                    // 8. Handle function calls: `Define -result- = -myFunc-(-arg1-, -arg2-);`
+                    // And module function calls: `Define -result- = -Module.func-(-arg-);`
+                    let matchFuncCall = line.match(/^Define -([a-zA-Z0-9_]+)- = -([a-zA-Z0-9_.]+)-\((.*?)\);$/);
+                    if (matchFuncCall) {
+                        let resultVarName = matchFuncCall[1];
+                        let fullFuncName = matchFuncCall[2]; // e.g., "myFunc" or "MathLib.circumference"
+                        let argsString = matchFuncCall[3];
+
+                        let func = null;
+                        let targetFuncScope = this.definedScope; // Default to global scope
+
+                        let moduleFuncMatch = fullFuncName.match(/^([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)$/);
+                        if (moduleFuncMatch) { // It's a module function call
+                            let moduleName = moduleFuncMatch[1];
+                            let fName = moduleFuncMatch[2];
+                            if (this.definedScope[moduleName] && this.definedScope[moduleName][fName]) {
+                                func = this.definedScope[moduleName][fName];
+                            }
+                        } else { // It's a global function or mini-function
+                            func = this.definedScope[fullFuncName];
+                        }
+                        
+                        if (func && (func.type === 'Function' || func.type === 'MiniFunc')) {
+                            // Resolve arguments for the call
+                            let callArgs = argsString.split(',').map(arg => {
+                                const trimmedArg = arg.trim();
+                                if (trimmedArg.startsWith('--') && trimmedArg.endsWith('--')) {
+                                    return this.resolveVariable(trimmedArg.slice(2, -2));
+                                }
+                                return this.evaluateExpression(trimmedArg, currentScope);
+                            });
+
+                            let result = func.execute(callArgs, currentScope); // Pass current scope as parent scope
+                            // Assign result to the defined variable
+                            currentScope[resultVarName] = result;
+                            this.appendOutput(`Function -${fullFuncName}- called. Result: -${resultVarName}- = ${JSON.stringify(result)}`, 'debug');
+                        } else {
+                            this.appendOutput(`Undefined function or MiniFunc: -${fullFuncName}-`, 'error');
+                        }
+                        return null;
+                    }
+
+                    // 9. Handle `Return value;`
+                    let matchReturn = line.match(/^Return (.+);$/);
+                    if (matchReturn) {
+                        let returnExpr = matchReturn[1];
+                        try {
+                            const returnValue = this.evaluateExpression(returnExpr, currentScope);
+                            return { type: 'Return', value: returnValue }; // Signal return value
+                        } catch (e) {
+                            return { type: 'Error', message: `Return value error: ${e.message}` };
+                        }
+                    }
+
+                    // 10. Handle `Module -ModuleName- { ... }`
+                    let matchModuleStart = line.match(/^Module -([a-zA-Z0-9_]+)- \{$/);
+                    if (matchModuleStart) {
+                        this.currentModule = matchModuleStart[1];
+                        this.appendOutput(`Entering Module definition: -${this.currentModule}-`, 'debug');
+                        if (!this.definedScope[this.currentModule]) {
+                            this.definedScope[this.currentModule] = {};
+                        }
+                        return null;
+                    }
+                    let matchModuleEnd = line.match(/^\}$/);
+                    if (matchModuleEnd && this.currentModule) {
+                        this.appendOutput(`Exiting Module definition: -${this.currentModule}-`, 'debug');
+                        this.currentModule = null;
+                        return null;
+                    }
+
+                    // 11. Handle `module =!> -ModuleName- { --function here-- }` (Zuss module import definition)
+                    let matchZussModuleImport = line.match(/^module =!> -([a-zA-Z0-9_]+)- \{/);
+                    if (matchZussModuleImport) {
+                        let moduleName = matchZussModuleImport[1];
+                        this.appendOutput(`[Zuss System] Zuss Module defined: -${moduleName}-. Functions within this block are accessible via -${moduleName}.functionName-`, 'system');
+                        // In a real interpreter, we'd parse and store the functions within this block.
+                        // For this demo, we just acknowledge it and assume functions defined subsequently
+                        // that match this module prefix are part of it.
+                        // We set currentModule to this Zuss module for subsequent function definitions
+                        this.currentModule = moduleName;
+                        return null;
+                    }
+
+
+                    this.appendOutput(`Unrecognized Z++ line: ${line}`, 'warn');
+                    return null;
+                },
+
+                // Main execution function
+                executeCode: function(code) {
+                    console.log("executeCode called!"); // Debugging point 3
+                    this.zppOutputDiv.innerHTML = ''; // Clear output
+                    this.definedScope = {}; // Reset scope
+                    this.zuss = null; // Reset Zuss instance
+                    this.callStack = [];
+                    this.currentModule = null;
+
+                    const lines = code.split('\n')
+                                      .map(line => line.trim()); // No filtering here, let processLine handle it
+
+                    let inMultiLineComment = false;
+                    for (let i = 0; i < lines.length; i++) {
+                        let line = lines[i];
+
+                        // Simple detection for multiline comment start/end
+                        if (line.includes('/*')) {
+                            inMultiLineComment = true;
+                            // If /* and */ are on the same line, process the rest of the line
+                            if (line.includes('*/') && line.indexOf('/*') < line.indexOf('*/')) {
+                                line = line.substring(line.indexOf('*/') + 2).trim();
+                                inMultiLineComment = false;
+                            } else {
+                                continue; // Skip if it's just the start of a multiline comment
+                            }
+                        } else if (line.includes('*/') && inMultiLineComment) {
+                            inMultiLineComment = false;
+                            line = line.substring(line.indexOf('*/') + 2).trim(); // Remove comment part
+                        } else if (inMultiLineComment) {
+                            continue; // Skip lines inside multi-line comment
+                        }
+
+                        // Process the line if it's not a comment line or the remaining part after a comment
+                        if (line.length > 0) {
+                            console.log(`Processing line: ${line}`); // Debugging point 4.1
+                            this.processLine(line);
+                        }
+                    }
+                }
+            };
+
+            // Set up ZppInterpreter's output div
+            zppEnvironment.zppOutputDiv = zppOutputDiv;
+
+            // Event listener for the "Run Z++ Code" button
+            runCodeButton.addEventListener('click', () => {
+                console.log("Run button clicked!"); // Debugging point 2
+                zppEnvironment.executeCode(zppEditor.getValue());
+            });
+
+            // Event listener for the "Reset Editor" button
+            resetEditorButton.addEventListener('click', () => {
+                zppEditor.setValue(defaultCode);
+                zppEnvironment.executeCode(''); // Clear output by running empty code
+            });
         });
     </script>
 </body>
