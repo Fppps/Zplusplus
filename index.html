@@ -13,6 +13,9 @@
             font-family: 'Inter', sans-serif;
             background-color: #1E1E1E; /* VS Code dark background */
             color: #D4D4D4; /* VS Code default text color */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column;
         }
         .app-container { /* Main wrapper for the entire page content */
             max-width: 1000px; /* Wider container for editor layout */
@@ -24,57 +27,84 @@
             display: flex; /* Use flexbox for overall layout */
             flex-direction: column;
             gap: 1.5rem; /* Spacing between sections */
+            flex-grow: 1; /* Allow container to grow */
         }
 
         /* Styles for the "Concepts Explained" section */
-        .concepts-section {
+        .concepts-section-content { /* Renamed to indicate it's the content pane */
             padding: 1.5rem;
             background-color: #2D2D2D; /* Slightly different background for this section */
             border-radius: 0.5rem;
             box-shadow: inset 0 1px 2px rgba(0,0,0,0.1);
         }
-        .concepts-section .inner-card {
+        .concepts-section-content .inner-card {
             background-color: #3C3C3C; /* Even lighter background for individual cards */
             padding: 1rem;
             border-radius: 0.5rem;
             box-shadow: 0 1px 2px rgba(0,0,0,0.1);
         }
 
+        /* Tab specific styles */
+        .tab-bar {
+            display: flex;
+            background-color: #2D2D2D; /* Tab bar background */
+            border-radius: 0.25rem 0.25rem 0 0; /* Rounded top corners */
+            overflow: hidden; /* Ensure rounded corners clip */
+        }
+        .tab-button {
+            padding: 0.75rem 1.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #858585; /* Inactive tab text */
+            background-color: #2D2D2D; /* Inactive tab background */
+            border-right: 1px solid #3C3C3C; /* Separator between tabs */
+            transition: all 0.2s ease-in-out;
+        }
+        .tab-button:last-child {
+            border-right: none;
+        }
+        .tab-button.active {
+            background-color: #1E1E1E; /* Active tab background (editor background) */
+            color: #D4D4D4; /* Active tab text */
+            border-bottom: 2px solid #569CD6; /* Active tab indicator blue */
+            position: relative;
+            z-index: 1; /* Bring active tab to front */
+            margin-bottom: -1px; /* Overlap with content border */
+        }
+        .tab-button:hover:not(.active) {
+            background-color: #2A2A2A; /* Hover for inactive tabs */
+        }
 
-        /* VS Code-like Editor Window styles */
+        .tab-content {
+            border: 1px solid #3C3C3C;
+            border-top: none; /* No top border, as it's covered by active tab */
+            border-radius: 0 0 0.25rem 0.25rem; /* Rounded bottom corners */
+            flex-grow: 1; /* Content takes remaining space */
+            background-color: #1E1E1E; /* Default content background */
+            padding: 1rem; /* Default padding for content areas */
+            overflow-y: auto; /* Allow scrolling within content if needed */
+        }
+        .tab-content.hidden {
+            display: none;
+        }
+
+
+        /* VS Code-like Editor Window styles - Adjusted for new tab layout */
         .vscode-editor-window {
             display: flex;
             flex-direction: column;
-            background-color: #1E1E1E; /* Editor background */
-            border: 1px solid #3C3C3C; /* VS Code border color */
-            border-radius: 0.25rem;
-            min-height: 500px; /* Minimum height for the editor window */
-            overflow: hidden; /* Hide overflow from rounded corners */
+            /* Removed border, background, and border-radius here as it's now applied to tab-content */
+            min-height: 500px; /* Minimum height for the editor window (including terminal) */
+            flex-grow: 1;
         }
 
-        .top-bar {
-            background-color: #2D2D2D; /* VS Code tab bar background */
-            border-bottom: 1px solid #3C3C3C;
-            padding: 0.5rem 1rem;
-            display: flex;
-            align-items: center;
+        .top-bar { /* Now serves as header for the tabbed content area */
+            display: none; /* Hide the old top-bar as we have tab-bar now */
         }
 
         .file-tab {
-            background-color: #1E1E1E; /* Active tab background */
-            color: #D4D4D4;
-            padding: 0.3rem 0.8rem;
-            border-radius: 0.25rem 0.25rem 0 0;
-            font-size: 0.875rem;
-            margin-right: 0.5rem;
-            cursor: pointer;
-            border: 1px solid #3C3C3C;
-            border-bottom: none;
-            position: relative;
-            top: 1px; /* Align with bottom border of top-bar */
-        }
-        .file-tab:hover {
-            background-color: #252526; /* Hover color for tabs */
+            display: none; /* Hide old file-tab */
         }
 
         .editor-container { /* Holds CodeMirror and buttons */
@@ -82,6 +112,8 @@
             display: flex;
             flex-direction: column;
             padding: 1rem; /* Padding inside the editor pane */
+            /* Removed padding from here as it's applied to tab-content */
+            border: none; /* No border here */
         }
 
         .toolbar-buttons {
@@ -192,14 +224,21 @@
 </head>
 <body class="p-4 md:p-8">
     <div class="app-container">
-        <!-- Introduction and Concepts Section -->
-        <div class="concepts-section">
-            <h1 class="text-3xl font-bold text-center mb-6 text-indigo-400">Welcome to Z++</h1>
-            <p class="mb-6 text-lg text-gray-300">
-                This is a conceptual demonstration of the Z++ language, showcasing its unique syntax and features.
-                You can enter Z++-like code in the console below and see a simulated output based on the rules we've defined.
-            </p>
+        <h1 class="text-3xl font-bold text-center mb-6 text-indigo-400">Welcome to Z++</h1>
+        <p class="mb-6 text-lg text-gray-300">
+            This is a conceptual demonstration of the Z++ language, showcasing its unique syntax and features.
+            You can enter Z++-like code in the console below and see a simulated output based on the rules we've defined.
+        </p>
 
+        <!-- Tab Bar -->
+        <div class="tab-bar">
+            <div id="concepts-tab-button" class="tab-button active">Z++ Concepts</div>
+            <div id="editor-tab-button" class="tab-button">Z++ Editor</div>
+        </div>
+
+        <!-- Tab Content Containers -->
+        <div id="concepts-tab-content" class="tab-content concepts-section-content">
+            <!-- Z++ Concepts Explained Section (moved here) -->
             <h2 class="text-2xl font-semibold text-indigo-300 mb-4">Z++ Concepts Explained</h2>
             <div class="space-y-4 text-gray-300">
                 <!-- Define Keyword and Naming -->
@@ -256,8 +295,8 @@
             </div>
         </div>
 
-        <!-- VS Code-like Editor Window -->
-        <div class="vscode-editor-window">
+        <div id="editor-tab-content" class="tab-content vscode-editor-window hidden">
+            <!-- Z++ Interactive Editor Section (moved here) -->
             <div class="top-bar">
                 <span class="file-tab">main.zpp</span>
             </div>
@@ -343,7 +382,7 @@
 
 
         document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOMContentLoaded fired!"); // Debugging point 1
+            console.log("DOMContentLoaded fired!"); 
             // Define the custom Z++ CodeMirror mode
             CodeMirror.defineSimpleMode("zplusplus", {
                 start: [
@@ -404,6 +443,11 @@
 
 
             // Get references to DOM elements
+            const conceptsTabButton = document.getElementById('concepts-tab-button');
+            const editorTabButton = document.getElementById('editor-tab-button');
+            const conceptsTabContent = document.getElementById('concepts-tab-content');
+            const editorTabContent = document.getElementById('editor-tab-content');
+
             const runCodeButton = document.getElementById('run-code');
             const resetEditorButton = document.getElementById('reset-editor');
             const zppOutputDiv = document.getElementById('zpp-output');
@@ -454,28 +498,38 @@ Define -MyZussModule.greetUser-('Alice');
 `;
 
             // Initialize CodeMirror editor
-            const zppEditor = CodeMirror(zppCodeEditorDiv, {
-                value: defaultCode,
-                mode: "zplusplus", // Use the custom Z++ mode
-                lineNumbers: true, // Show line numbers
-                theme: "dracula", // Use the Dracula theme
-                indentUnit: 4,
-                tabSize: 4,
-                indentWithTabs: false,
-                smartIndent: true,
-                autoCloseBrackets: true,
-            });
+            // Initialize CodeMirror only when the editor tab is selected, or ensure it's refreshed.
+            let zppEditor = null; // Declare zppEditor here so it's accessible globally within this scope
+
+            const initializeEditor = () => {
+                if (!zppEditor) {
+                    zppEditor = CodeMirror(zppCodeEditorDiv, {
+                        value: defaultCode,
+                        mode: "zplusplus",
+                        lineNumbers: true,
+                        theme: "dracula",
+                        indentUnit: 4,
+                        tabSize: 4,
+                        indentWithTabs: false,
+                        smartIndent: true,
+                        autoCloseBrackets: true,
+                    });
+                    console.log("CodeMirror editor initialized."); // Debugging point: Editor initialized
+                } else {
+                    zppEditor.refresh(); // Refresh if already initialized but hidden
+                    console.log("CodeMirror editor refreshed."); // Debugging point: Editor refreshed
+                }
+            };
 
             // Z++ Interpreter Environment
             let zppEnvironment = {
                 definedScope: {},
-                zuss: null, // Instance of the Zuss class
+                zuss: null,
                 callStack: [],
                 currentModule: null,
 
-                // Helper to append output to the console
                 appendOutput: function(message, type = 'info') {
-                    console.log(`[appendOutput called] Message: ${message}, Type: ${type}`); // Debugging point 5
+                    console.log(`[appendOutput called] Message: ${message}, Type: ${type}`);
                     const prefix = {
                         'info': '[Z++ Log] ',
                         'debug': '[Z++ Debug] ',
@@ -497,7 +551,6 @@ Define -MyZussModule.greetUser-('Alice');
                     zppOutputDiv.scrollTop = zppOutputDiv.scrollHeight;
                 },
 
-                // Resolves a variable name, checking current scope then global scope
                 resolveVariable: function(varName) {
                     const currentScope = this.callStack.length > 0 ? this.callStack[this.callStack.length - 1].localVars : this.definedScope;
                     
@@ -507,19 +560,16 @@ Define -MyZussModule.greetUser-('Alice');
                     if (this.definedScope[varName] !== undefined) {
                         return this.definedScope[varName];
                     }
-                    // Handle module-scoped variables e.g., MathLib.PI
                     const moduleMatch = varName.match(/^([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)$/);
                     if (moduleMatch && this.definedScope[moduleMatch[1]] && this.definedScope[moduleMatch[1]][moduleMatch[2]] !== undefined) {
                          return this.definedScope[moduleMatch[1]][moduleMatch[2]];
                     }
-                    return undefined; // Not found
+                    return undefined;
                 },
 
-                // Evaluates a simple expression (numbers, strings, variables)
                 evaluateExpression: function(expr, scope) {
                     expr = expr.trim();
 
-                    // ToString function call
                     let toStringMatch = expr.match(/^ToString\((.+)\)$/);
                     if (toStringMatch) {
                         let innerExpr = toStringMatch[1];
@@ -527,19 +577,15 @@ Define -MyZussModule.greetUser-('Alice');
                         return String(value);
                     }
 
-                    // String literal
                     if ((expr.startsWith('"') && expr.endsWith('"')) || (expr.startsWith("'") && expr.endsWith("'"))) {
                         return expr.slice(1, -1);
                     }
-                    // Number literal
                     if (!isNaN(expr)) {
                         return Number(expr);
                     }
-                    // Boolean literal
                     if (expr === 'true') return true;
                     if (expr === 'false') return false;
 
-                    // Variable reference (e.g., -myVar-)
                     let varMatch = expr.match(/^-([a-zA-Z0-9_]+)-$/);
                     if (varMatch) {
                         const varName = varMatch[1];
@@ -551,16 +597,14 @@ Define -MyZussModule.greetUser-('Alice');
                         return resolved;
                     }
 
-                    // Simple arithmetic (very basic for demo)
                     try {
-                        // Replace Z++ variable syntax with JS variable names for eval
                         let jsExpr = expr.replace(/-([a-zA-Z0-9_]+)-/g, (match, p1) => {
                             const resolved = this.resolveVariable(p1);
                             if (resolved === undefined) {
                                 this.appendOutput(`Undefined variable in expression: -${p1}-`, 'error');
                                 throw new Error(`Undefined variable: -${p1}-`);
                             }
-                            return JSON.stringify(resolved); // Convert to JSON string for eval safety with strings
+                            return JSON.stringify(resolved);
                         });
                         // eslint-disable-next-line no-eval
                         return eval(jsExpr);
@@ -570,24 +614,21 @@ Define -MyZussModule.greetUser-('Alice');
                     }
                 },
 
-                // Processes a single line of Z++ code
                 processLine: function(line, currentScope = this.definedScope) {
-                    console.log(`Inside processLine: ${line}`); // Debugging point 4.2
-                    // Remove // comments
+                    console.log(`Inside processLine: ${line}`);
                     line = line.split('//')[0].trim();
-                    if (line.length === 0) return null; // Skip empty lines after comment removal
+                    if (line.length === 0) return null;
 
-                    // 1. Handle `Define -variable- = value;` or `Define -module.variable- = value;`
                     let matchDefineVar = line.match(/^Define -([a-zA-Z0-9_]+)- = (.+);$/);
                     let matchDefineModuleVar = line.match(/^Define -([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)- = (.+);$/);
 
-                    if (matchDefineModuleVar) { // e.g. Define -MathLib.PI- = 3.14;
+                    if (matchDefineModuleVar) {
                         let moduleName = matchDefineModuleVar[1];
                         let varName = matchDefineModuleVar[2];
                         let varValueExpr = matchDefineModuleVar[3];
 
                         if (!this.definedScope[moduleName] || typeof this.definedScope[moduleName] !== 'object') {
-                            this.definedScope[moduleName] = {}; // Create module object if it doesn't exist
+                            this.definedScope[moduleName] = {};
                             this.appendOutput(`[Z++ Debug] Created module object: ${moduleName}`, 'debug');
                         }
                         try {
@@ -599,12 +640,11 @@ Define -MyZussModule.greetUser-('Alice');
                         }
                         return null;
                     }
-                    else if (matchDefineVar) { // e.g. Define -myVar- = 10;
+                    else if (matchDefineVar) {
                         let varName = matchDefineVar[1];
                         let varValueExpr = matchDefineVar[2];
                         try {
                             const parsedValue = this.evaluateExpression(varValueExpr, currentScope);
-                            // Assign to current scope (local for functions, global otherwise)
                             currentScope[varName] = parsedValue;
                             this.appendOutput(`[Z++ Debug] Defined: -${varName}- = ${JSON.stringify(currentScope[varName])}`, 'debug');
                         } catch (e) {
@@ -613,14 +653,12 @@ Define -MyZussModule.greetUser-('Alice');
                         return null;
                     }
 
-                    // 2. Handle `Define.log (level) "message";`
                     let matchDefineLog = line.match(/^Define\.log (\((\d)\))? (.+);$/);
                     if (matchDefineLog) {
                         let level = matchDefineLog[2] ? parseInt(matchDefineLog[2]) : 1;
                         let contentExpr = matchDefineLog[3].trim();
                         
                         try {
-                             // Evaluate content, which can be a variable or expression
                              let content = this.evaluateExpression(contentExpr, currentScope);
 
                             if (level === 0) {
@@ -638,28 +676,23 @@ Define -MyZussModule.greetUser-('Alice');
                         return null;
                     }
 
-                    // 3. Handle `ZmPut "Zuss";`
                     let matchZmPut = line.match(/^ZmPut "Zuss";$/);
                     if (matchZmPut) {
-                        // Instantiate Zuss class and make it available
                         this.zuss = new Zuss(this.appendOutput.bind(this), this.resolveVariable.bind(this), this.evaluateExpression.bind(this));
                         this.appendOutput(`Zuss addon loaded.`, 'system');
                         return null;
                     }
 
-                    // 4. Handle `Prev.log: ([access_parameter, data_to_log]);`
                     let matchPrevLog = line.match(/^Prev\.log: \(\[(.+?)\]\);$/);
                     if (matchPrevLog) {
-                        if (!this.zuss) { // Check if Zuss instance exists
+                        if (!this.zuss) {
                             this.appendOutput(`Prev.log: called but Zuss addon not loaded. Use 'ZmPut "Zuss";' first.`, 'error');
                             return null;
                         }
-                        // Delegate logging to the Zuss instance
                         this.zuss.log(matchPrevLog[1]);
                         return null;
                     }
 
-                    // 5. Handle `MiniFunc -name-(param) =? expression;`
                     let matchMiniFunc = line.match(/^MiniFunc -([a-zA-Z0-9_]+)-\((.+?)\) =\? (.+);$/);
                     if (matchMiniFunc) {
                         let funcName = matchMiniFunc[1];
@@ -669,7 +702,7 @@ Define -MyZussModule.greetUser-('Alice');
                         this.definedScope[funcName] = {
                             type: 'MiniFunc',
                             params: [paramName],
-                            body: expression, // Storing expression as body for mini-func
+                            body: expression,
                             execute: (args, scope) => {
                                 const tempScope = { ...scope, [paramName]: args[0] };
                                 return this.evaluateExpression(expression, tempScope);
@@ -679,7 +712,6 @@ Define -MyZussModule.greetUser-('Alice');
                         return null;
                     }
 
-                    // 6. Handle `Define -functionName-(params) { ... }` (function definition)
                     let matchDefineFunc = line.match(/^Define -([a-zA-Z0-9_]+)-\((.*?)\)\s*\{(.+?)\}/s);
                     if (matchDefineFunc) {
                         let funcName = matchDefineFunc[1];
@@ -695,7 +727,7 @@ Define -MyZussModule.greetUser-('Alice');
                                 targetScope[this.currentModule] = {};
                             }
                             targetScope = targetScope[this.currentModule];
-                            actualFuncName = funcName; // Store without module prefix in module object
+                            actualFuncName = funcName;
                         }
                         
                         targetScope[actualFuncName] = {
@@ -704,26 +736,24 @@ Define -MyZussModule.greetUser-('Alice');
                             body: bodyLines,
                             execute: (args, parentScope) => {
                                 let returnVal = undefined;
-                                const localScope = { ...parentScope }; // Start with parent scope variables
+                                const localScope = { ...parentScope };
                                 
-                                // Map arguments to parameters in local scope
                                 params.forEach((param, i) => {
                                     localScope[param] = args[i];
                                 });
 
-                                // Push new scope to stack
                                 this.callStack.push({ localVars: localScope, returnVal: undefined });
 
                                 for (let i = 0; i < bodyLines.length; i++) {
                                     const bodyLine = bodyLines[i];
-                                    let result = this.processLine(bodyLine, localScope); // Execute line in local scope
+                                    let result = this.processLine(bodyLine, localScope);
                                     if (result && result.type === 'Return') {
                                         this.callStack[this.callStack.length - 1].returnVal = result.value;
                                         returnVal = result.value;
-                                        break; // Exit function execution
+                                        break;
                                     }
                                 }
-                                this.callStack.pop(); // Pop scope from stack
+                                this.callStack.pop();
                                 return returnVal;
                             }
                         };
@@ -731,54 +761,46 @@ Define -MyZussModule.greetUser-('Alice');
                         return null;
                     }
 
-                    // 7. Handle `Define -variable- =| expression;` (Conditional Assignment)
                     let matchConditionalAssign = line.match(/^Define -([a-zA-Z0-9_]+)- =\| (.+);$/);
                     if (matchConditionalAssign) {
                         let varName = matchConditionalAssign[1];
                         let exprValue = matchConditionalAssign[2].trim();
                         let targetScope = this.callStack.length > 0 ? this.callStack[this.callStack.length - 1].localVars : this.definedScope;
 
-                        // Simulate 'stop midway' condition
                         if (exprValue === "'fail'" || exprValue === '"fail"' || exprValue === 'null' || exprValue === 'undefined') {
                             this.appendOutput(`Operation for -${varName}- stopped midway.`, 'warn');
-                            targetScope[varName] = null; // Set to null to indicate failure/no result
+                            targetScope[varName] = null;
                         } else {
                             try {
                                 let assignedValue = this.evaluateExpression(exprValue, targetScope);
                                 targetScope[varName] = assignedValue;
                                 this.appendOutput(`Conditional assign: -${varName}- = ${JSON.stringify(assignedValue)}`, 'debug');
                             } catch (e) {
-                                // Error already logged by evaluateExpression
                                 targetScope[varName] = null;
                             }
                         }
                         return null;
                     }
 
-                    // 8. Handle function calls: `Define -result- = -myFunc-(-arg1-, -arg2-);`
-                    // And module function calls: `Define -result- = -Module.func-(-arg-);`
                     let matchFuncCall = line.match(/^Define -([a-zA-Z0-9_]+)- = -([a-zA-Z0-9_.]+)-\((.*?)\);$/);
                     if (matchFuncCall) {
                         let resultVarName = matchFuncCall[1];
-                        let fullFuncName = matchFuncCall[2]; // e.g., "myFunc" or "MathLib.circumference"
+                        let fullFuncName = matchFuncCall[2];
                         let argsString = matchFuncCall[3];
 
                         let func = null;
-                        let targetFuncScope = this.definedScope; // Default to global scope
-
                         let moduleFuncMatch = fullFuncName.match(/^([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)$/);
-                        if (moduleFuncMatch) { // It's a module function call
+                        if (moduleFuncMatch) {
                             let moduleName = moduleFuncMatch[1];
                             let fName = moduleFuncMatch[2];
                             if (this.definedScope[moduleName] && this.definedScope[moduleName][fName]) {
                                 func = this.definedScope[moduleName][fName];
                             }
-                        } else { // It's a global function or mini-function
+                        } else {
                             func = this.definedScope[fullFuncName];
                         }
                         
                         if (func && (func.type === 'Function' || func.type === 'MiniFunc')) {
-                            // Resolve arguments for the call
                             let callArgs = argsString.split(',').map(arg => {
                                 const trimmedArg = arg.trim();
                                 if (trimmedArg.startsWith('--') && trimmedArg.endsWith('--')) {
@@ -787,8 +809,7 @@ Define -MyZussModule.greetUser-('Alice');
                                 return this.evaluateExpression(trimmedArg, currentScope);
                             });
 
-                            let result = func.execute(callArgs, currentScope); // Pass current scope as parent scope
-                            // Assign result to the defined variable
+                            let result = func.execute(callArgs, currentScope);
                             currentScope[resultVarName] = result;
                             this.appendOutput(`Function -${fullFuncName}- called. Result: -${resultVarName}- = ${JSON.stringify(result)}`, 'debug');
                         } else {
@@ -797,19 +818,17 @@ Define -MyZussModule.greetUser-('Alice');
                         return null;
                     }
 
-                    // 9. Handle `Return value;`
                     let matchReturn = line.match(/^Return (.+);$/);
                     if (matchReturn) {
                         let returnExpr = matchReturn[1];
                         try {
                             const returnValue = this.evaluateExpression(returnExpr, currentScope);
-                            return { type: 'Return', value: returnValue }; // Signal return value
+                            return { type: 'Return', value: returnValue };
                         } catch (e) {
                             return { type: 'Error', message: `Return value error: ${e.message}` };
                         }
                     }
 
-                    // 10. Handle `Module -ModuleName- { ... }`
                     let matchModuleStart = line.match(/^Module -([a-zA-Z0-9_]+)- \{$/);
                     if (matchModuleStart) {
                         this.currentModule = matchModuleStart[1];
@@ -826,15 +845,10 @@ Define -MyZussModule.greetUser-('Alice');
                         return null;
                     }
 
-                    // 11. Handle `module =!> -ModuleName- { --function here-- }` (Zuss module import definition)
                     let matchZussModuleImport = line.match(/^module =!> -([a-zA-Z0-9_]+)- \{/);
                     if (matchZussModuleImport) {
                         let moduleName = matchZussModuleImport[1];
                         this.appendOutput(`[Zuss System] Zuss Module defined: -${moduleName}-. Functions within this block are accessible via -${moduleName}.functionName-`, 'system');
-                        // In a real interpreter, we'd parse and store the functions within this block.
-                        // For this demo, we just acknowledge it and assume functions defined subsequently
-                        // that match this module prefix are part of it.
-                        // We set currentModule to this Zuss module for subsequent function definitions
                         this.currentModule = moduleName;
                         return null;
                     }
@@ -846,7 +860,7 @@ Define -MyZussModule.greetUser-('Alice');
 
                 // Main execution function
                 executeCode: function(code) {
-                    console.log("executeCode called!"); // Debugging point 3
+                    console.log("executeCode called!"); 
                     this.zppOutputDiv.innerHTML = ''; // Clear output
                     this.definedScope = {}; // Reset scope
                     this.zuss = null; // Reset Zuss instance
@@ -854,32 +868,29 @@ Define -MyZussModule.greetUser-('Alice');
                     this.currentModule = null;
 
                     const lines = code.split('\n')
-                                      .map(line => line.trim()); // No filtering here, let processLine handle it
+                                      .map(line => line.trim());
 
                     let inMultiLineComment = false;
                     for (let i = 0; i < lines.length; i++) {
                         let line = lines[i];
 
-                        // Simple detection for multiline comment start/end
                         if (line.includes('/*')) {
                             inMultiLineComment = true;
-                            // If /* and */ are on the same line, process the rest of the line
                             if (line.includes('*/') && line.indexOf('/*') < line.indexOf('*/')) {
                                 line = line.substring(line.indexOf('*/') + 2).trim();
                                 inMultiLineComment = false;
                             } else {
-                                continue; // Skip if it's just the start of a multiline comment
+                                continue;
                             }
                         } else if (line.includes('*/') && inMultiLineComment) {
                             inMultiLineComment = false;
-                            line = line.substring(line.indexOf('*/') + 2).trim(); // Remove comment part
+                            line = line.substring(line.indexOf('*/') + 2).trim();
                         } else if (inMultiLineComment) {
-                            continue; // Skip lines inside multi-line comment
+                            continue;
                         }
 
-                        // Process the line if it's not a comment line or the remaining part after a comment
                         if (line.length > 0) {
-                            console.log(`Processing line: ${line}`); // Debugging point 4.1
+                            console.log(`Processing line: ${line}`);
                             this.processLine(line);
                         }
                     }
@@ -889,16 +900,46 @@ Define -MyZussModule.greetUser-('Alice');
             // Set up ZppInterpreter's output div
             zppEnvironment.zppOutputDiv = zppOutputDiv;
 
-            // Event listener for the "Run Z++ Code" button
+            // --- Tab Handling Logic ---
+            const switchTab = (tabId) => {
+                // Deactivate all tab buttons and hide all tab contents
+                conceptsTabButton.classList.remove('active');
+                editorTabButton.classList.remove('active');
+                conceptsTabContent.classList.add('hidden');
+                editorTabContent.classList.add('hidden');
+
+                // Activate the clicked tab and show its content
+                if (tabId === 'concepts') {
+                    conceptsTabButton.classList.add('active');
+                    conceptsTabContent.classList.remove('hidden');
+                } else if (tabId === 'editor') {
+                    editorTabButton.classList.add('active');
+                    editorTabContent.classList.remove('hidden');
+                    initializeEditor(); // Initialize/refresh CodeMirror when editor tab is shown
+                }
+            };
+
+            // Event Listeners for Tab Buttons
+            conceptsTabButton.addEventListener('click', () => switchTab('concepts'));
+            editorTabButton.addEventListener('click', () => switchTab('editor'));
+
+            // Initial tab display: Show concepts tab by default
+            // switchTab('concepts'); // Keep concepts visible by default
+
+            // If the user wants the editor tab to be active by default:
+            switchTab('editor'); // Show editor tab by default on load
+
+            // Event listeners for the "Run Z++ Code" and "Reset Editor" buttons
             runCodeButton.addEventListener('click', () => {
-                console.log("Run button clicked!"); // Debugging point 2
+                console.log("Run button clicked!");
                 zppEnvironment.executeCode(zppEditor.getValue());
             });
 
-            // Event listener for the "Reset Editor" button
             resetEditorButton.addEventListener('click', () => {
                 zppEditor.setValue(defaultCode);
-                zppEnvironment.executeCode(''); // Clear output by running empty code
+                zppEnvironment.executeCode('');
+                zppOutputDiv.innerHTML = ''; // Ensure output is completely clear
+                console.log("Editor reset.");
             });
         });
     </script>
